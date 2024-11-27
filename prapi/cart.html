@@ -77,8 +77,13 @@
                 ];
 
                 // Define os detalhes da transação
-                console.log('no Display Items');
                 const paymentDetails = {
+                    displayItems: [
+                        {
+                            label: 'Produto X',
+                            amount: { currency: 'BRL', value: '50.00' }
+                        }
+                    ],
                     total: {
                         label: 'Total',
                         amount: { currency: 'BRL', value: '50.00' }
@@ -86,7 +91,8 @@
                 };
 
                 // Cria um novo objeto PaymentRequest
-                const request = new PaymentRequest(paymentMethods, paymentDetails);
+                console.log('Empty paymentDetails');
+                const request = new PaymentRequest(paymentMethods, {});
 
                 // Exibe o sheet de pagamento
                 request.show()
