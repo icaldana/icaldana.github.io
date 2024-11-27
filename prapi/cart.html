@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cart</title>
+    <script src="https://beta-sdk.mercadopago.com/gama/js/v2"></script>
     <link rel="stylesheet" href="cart-style.css">
 </head>
 
@@ -55,41 +56,11 @@
             </div>
 
         </div>
-
-
         <button id="purchase-button" class="purchase-button" onclick="initPrapi()"
             data-content="CONTINUE">CONTINUE</button>
-
     </div>
 
     <script>
-
-        async function checkMercadoPagoPRApi() {
-            document.getElementById('purchase-button-mp').style.display = 'none'
-            const paymentDetails = {
-                displayItems: [
-                    {
-                        label: 'Produto X',
-                        amount: { currency: 'BRL', value: '50.00' }
-                    }
-                ],
-                total: {
-                    label: 'Total',
-                    amount: { currency: 'BRL', value: '50.00' }
-                }
-            };
-            const supportsMercadoPagoPay = await new PaymentRequest(
-                [{ supportedMethods: "https://beta.mercadopago.com/fido/pay/provider/index.html" }],
-                paymentDetails,
-            ).canMakePayment();
-            console.log(supportsMercadoPagoPay, '1')
-            alert(supportsMercadoPagoPay)
-            if (supportsMercadoPagoPay) {
-                document.getElementById('purchase-button-mp').style.display = 'grid'
-            }
-        }
-
-        checkMercadoPagoPRApi()
 
         function initPrapi() {
             if (window.PaymentRequest) {
@@ -121,7 +92,6 @@
 
                 // Cria um novo objeto PaymentRequest
                 const request = new PaymentRequest(paymentMethods, paymentDetails);
-
 
                 // Exibe o sheet de pagamento
                 request.show()
