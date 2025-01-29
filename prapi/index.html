@@ -46,7 +46,7 @@
 
             let authenticator;
             let authorizationToken;
-            let loggedPaymentMethods;
+            let accountPaymentMethods;
 
             try {
                 // Starts the authentication flow using the order amount and the payer's email
@@ -68,7 +68,7 @@
             try {
                 // Obtains the account payment methods for the logged user
                 accountPaymentMethods = await mp.getAccountPaymentMethods({
-                    amount: amount,
+                    amount: totalAmount,
                 }, {
                     authorization: authorizationToken,
                     callerId: '1322442691',
