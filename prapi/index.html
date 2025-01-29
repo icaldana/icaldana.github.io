@@ -67,7 +67,7 @@
             try {
                 // Obtains the account payment methods for the logged user
                 accountPaymentMethods = await mp.getAccountPaymentMethods({
-                    amount: amount,
+                    amount: totalAmount,
                 }, {
                     authorization: "12345678",
                     callerId: '1322442691',
