@@ -59,6 +59,7 @@
             try {
                 // Obtains the token for authentication
                 authorizationToken = await authenticator.show();
+                console.log(authorizationToken);
             } catch (error) {
                 console.error("Error obtaining authorization token:", error?.errorCode);
                 return;
