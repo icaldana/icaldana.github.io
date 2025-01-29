@@ -78,6 +78,7 @@
                 }
                 )
                 // Proceed with payment method selection
+                console.log(accountPaymentMethods);
                 return accountPaymentMethods;
             } catch (error) {
                 console.error("Error obtaining payment methods:", error?.errorCode);
