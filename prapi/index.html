@@ -70,7 +70,7 @@
                 accountPaymentMethods = await mp.getAccountPaymentMethods({
                     amount: totalAmount,
                 }, {
-                    authorization: authorizationToken,
+                    authorization: authorizationToken.trim(),
                     callerId: '1322442691',
                     clientId: '874202490252970',
                     collectorId: '1288472937',
