@@ -42,7 +42,7 @@
 
         async function initFlow() {
             const payerEmail = "test_user_82578115@testuser.com";
-            const totalAmount = "200.00";
+            const totalAmount = "100.00";
 
             let authenticator;
             let authorizationToken;
@@ -59,16 +59,15 @@
             try {
                 // Obtains the token for authentication
                 authorizationToken = await authenticator.show();
-                console.log(authorizationToken);
             } catch (error) {
-                console.error("Error obtaining authorization token:", error?.errorCode);
+                console.error("Error obtaining authorization token:", error?.errorCode || error);
                 return;
             }
 
             try {
                 // Obtains the account payment methods for the logged user
                 accountPaymentMethods = await mp.getAccountPaymentMethods({
-                    amount: totalAmount,
+                    amount: amount,
                 }, {
                     authorization: "12345678",
                     callerId: '1322442691',
@@ -78,10 +77,9 @@
                 }
                 )
                 // Proceed with payment method selection
-                console.log(accountPaymentMethods);
                 return accountPaymentMethods;
             } catch (error) {
-                console.error("Error obtaining payment methods:", error?.errorCode);
+                console.error("Error obtaining payment methods:", error?.errorCode || error);
                 return; // TODO: ADD ERROR HANDLING
             }
         }
