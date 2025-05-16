@@ -1,0 +1,289 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f0f0f0; /* Slightly lighter grey background */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Remove generic header, h1, container, footer styles if they were placeholders */
+header,
+.container,
+footer {
+  display: none;
+}
+
+.checkout-container {
+  background-color: #ffffff;
+  padding: 24px;
+  border-radius: 16px; /* More pronounced border radius */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Softer shadow */
+  width: 100%;
+  max-width: 380px; /* Adjusted width */
+}
+
+.checkout-container h1 {
+  /* "Escolha como pagar" */
+  font-size: 22px; /* Slightly larger */
+  font-weight: 700; /* Bolder */
+  color: #333333;
+  margin-top: 0; /* Remove default margin if any */
+  margin-bottom: 28px;
+  text-align: left;
+}
+
+.payment-section {
+  margin-bottom: 16px; /* Adjusted spacing */
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px; /* Reduced margin below "Com Mercado Pago" */
+  padding-bottom: 8px; /* Keep padding for visual separation if needed */
+  /* border-bottom: 1px solid #f0f0f0; */ /* Optional: if a light line is desired below header */
+}
+
+.section-header h2 {
+  /* "Com Mercado Pago" */
+  font-size: 15px; /* Slightly smaller */
+  font-weight: 600;
+  color: #333333; /* Darker text */
+  margin: 0;
+}
+
+.mp-logo {
+  width: 22px; /* Slightly smaller */
+  height: 22px;
+}
+
+/* Ensure first option under a header has a top border */
+#account-payment-methods-list > .payment-option:first-child,
+#other-payment-options-list > .payment-option:first-child {
+  border-top: 1px solid #eeeeee;
+}
+
+/* No top border if it's the absolute first thing (e.g. if header is removed) */
+.payment-section > .payment-option:first-child {
+  /* border-top: none; */ /* This might be too general, handled by list specific above */
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  padding: 14px 0; /* Adjusted padding */
+  border-bottom: 1px solid #eeeeee; /* Lighter border */
+  cursor: pointer;
+  position: relative;
+}
+
+.payment-option:last-child {
+  border-bottom: none; /* No border for the last item in a list */
+}
+
+.payment-option.selected {
+  /* background-color: #f7f7f7; */ /* Subtle selection background */
+}
+
+.payment-option input[type="radio"] {
+  margin-right: 16px;
+  width: 20px;
+  height: 20px;
+  accent-color: #009ee3; /* Mercado Pago Blue */
+  /* Custom styling for radio might be needed for exact match */
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 50%;
+  border: 1.5px solid #b0b0b0; /* Grey border for unselected */
+  outline: none;
+  cursor: pointer;
+  position: relative; /* For custom checkmark */
+  top: -1px; /* Fine-tune vertical alignment */
+}
+
+.payment-option input[type="radio"]:checked {
+  border-color: #009ee3; /* MP Blue border when checked */
+}
+
+.payment-option input[type="radio"]:checked::before {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: auto;
+  border-radius: 50%;
+  background-color: #009ee3;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.payment-icon {
+  width: 36px; /* Adjusted size to better fit image */
+  height: 36px;
+  margin-right: 12px; /* Adjusted spacing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%; /* Circular background for icons like the wallet */
+  overflow: hidden; /* Ensure image inside respects the circle */
+}
+
+.payment-icon.account-money-icon-bg {
+  /* Specific for "Saldo em conta" */
+  background-color: #ffdd00; /* Mercado Pago Yellow */
+}
+
+.payment-icon img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: scale-down; /* Use scale-down to prevent small icons from stretching */
+  border-radius: 4px; /* Only if individual images have their own border, otherwise 0 */
+}
+
+.payment-icon.account-money-icon-bg img {
+  max-width: 60%; /* Adjust wallet icon size within the yellow circle */
+  max-height: 60%;
+}
+
+.static-option-icon {
+  width: 36px;
+  height: 36px;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* border: 1px solid #ddd; */ /* Removed border */
+  border-radius: 4px;
+  font-size: 22px; /* Adjusted emoji/SVG size */
+  color: #555555; /* Grey color for static icons */
+}
+
+.static-option-icon svg {
+  width: 22px; /* Control size of SVG if used */
+  height: 22px;
+  fill: #555555;
+}
+
+.payment-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Vertically center title and subtitle */
+  flex-grow: 1;
+}
+
+.payment-title {
+  /* For "Saldo em conta", "Santander Credito" etc. */
+  font-size: 15px;
+  font-weight: 500; /* Medium weight */
+  color: #333333;
+  margin-bottom: 1px;
+}
+
+.payment-subtitle {
+  font-size: 12px; /* Smaller subtitle */
+  color: #00a650; /* Green for "Até 6x..." */
+  font-weight: 400;
+}
+
+.payment-subtitle.info {
+  /* For "Suficiente para esta compra" */
+  color: #666666; /* Softer grey */
+}
+
+#payButton {
+  width: 100%;
+  padding: 14px;
+  background-color: #009ee3; /* Mercado Pago Blue */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+#payButton:hover {
+  background-color: #0056b3; /* Darker shade of primary; MP Dark Blue: #0076B7 */
+}
+
+/* Styles for CVV and Installments section */
+#card-details-input-area {
+  padding: 16px 0px; /* Match vertical padding of payment-option, no horizontal padding as it's full width */
+  border-top: 1px solid #eaeaea; /* Separator line if it appears after a selected card */
+  /* margin-top: 0; Will be managed by JS or specific context if needed */
+}
+
+.card-input-group {
+  margin-bottom: 16px;
+}
+
+.card-input-group:last-child {
+  margin-bottom: 0;
+}
+
+.card-input-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.card-input-group input[type="text"],
+.card-input-group input[type="tel"],
+.card-input-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+.card-input-group input[type="text"]:focus,
+.card-input-group input[type="tel"]:focus,
+.card-input-group select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Style for the CVV input with icon placeholder */
+.cvv-input-container {
+  position: relative;
+}
+
+.cvv-input-container input {
+  padding-right: 40px; /* Space for the icon */
+}
+
+.cvv-icon-placeholder {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px; /* Adjust as needed */
+  height: auto;
+  opacity: 0.5; /* Match the faint icon in the image */
+}
+
+/* Style for the select dropdown arrow */
+.card-input-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D'10'%20height%3D'5'%20viewBox%3D'0%200%2010%205'%20fill%3D'none'%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%3E%3Cpath%20d%3D'M0%200L5%205L10%200H0Z'%20fill%3D'%23888888'%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px; /* Make space for the arrow */
+}
