@@ -6,16 +6,24 @@ This project demonstrates integration with Mercado Pago's Transparent Checkout, 
 
 The main implemented flow is:
 
-1.  Initialization of the Mercado Pago SDK.
-2.  User/payment authentication to obtain an `authorizationToken`.
-3.  Fetching saved payment methods from the Mercado Pago account.
-4.  Rendering the payment methods.
-5.  When a saved credit card requiring CVV is selected:
-    - Rendering a Mercado Pago Secure Field for CVV input.
-    - Obtaining the `card_id` of the selected card.
-    - Creating a `cardToken` (single-use token) from the `card_id` and the CVV entered in the Secure Field.
-    - Updating the `selectedCard.token` (pseudotoken) of the saved card with the newly generated `cardToken`.
-6.  Simulation of payment processing (call to a placeholder backend endpoint).
+1.  **Page Load (`js/script.js` - `setupInitialView`):**
+    - The Mercado Pago SDK is initialized.
+    - `MPAuthenticator.initializeAuthenticator(amount, payerEmail)` is called to initialize the `authenticatorInstance` in the background.
+    - A single "Credit Card" option is displayed as a trigger.
+2.  **User Clicks "Credit Card" Trigger (`js/script.js` - `renderStaticPaymentOptions` initial `onclick`):**
+    - The section for saved payment methods becomes visible.
+    - `initializePaymentFlow()` in `script.js` is executed.
+3.  **Payment Flow Execution (`js/script.js` - `initializePaymentFlow`):**
+    - `MPAuthenticator.getAuthorizationToken()` is called, which internally uses the pre-initialized `authenticatorInstance` to call `authenticatorInstance.show()` and obtain an `authorizationToken`.
+    - `MPAuthenticator.getAccountPaymentMethods(authorizationToken)` is called to fetch saved payment methods.
+    - Saved payment methods are rendered.
+    - The "Credit Card" trigger is re-rendered below the saved methods, now functioning as an "Add new credit card" option.
+4.  **When a saved credit card requiring CVV is selected (`js/script.js`):**
+    - A Mercado Pago Secure Field for CVV input is rendered (`MPAuthenticator.createSecureField`).
+    - The `card_id` of the selected card is obtained (`MPAuthenticator.getCardId`).
+    - A `cardToken` (single-use token) is created from the `card_id` and the CVV (`MPAuthenticator.getCardToken`).
+    - The `selectedCard.token` (pseudotoken) of the saved card is updated with the newly generated `cardToken` (`MPAuthenticator.updateSelectedCardToken`).
+5.  Simulation of payment processing (call to a placeholder backend endpoint in `js/script.js`).
 
 ## Project Structure
 
@@ -31,13 +39,12 @@ The main implemented flow is:
 
 ## JavaScript Implementation Details
 
-To simplify local execution directly from the filesystem (`file:///`) and avoid CORS issues with ES6 modules, the project does not use native `import`/`export`. Instead, scripts are loaded sequentially in `index.html`.
+To simplify local execution directly from the filesystem (`file:///`) and avoid CORS issues with ES6 modules, the project does not use native `import`/`export`. Scripts are loaded sequentially in `index.html`.
 
 The Mercado Pago interaction logic is centralized in the `js/mercadoPago.js` file. This file defines a global object `window.MPAuthenticator` that encapsulates all calls to the Mercado Pago SDK and related flow logic. The main responsibilities of `MPAuthenticator` include:
 
-- **`MPAuthenticator.initializePaymentData()`**: Orchestrates the initial authentication process (`mp.authenticator`, `authenticator.show`) and fetching account payment methods (`mp.getAccountPaymentMethods`). Returns payment methods and the `authorizationToken`.
-- **`MPAuthenticator.initializeAuthenticator(amount, payerEmail)`**: Starts the Mercado Pago authentication flow.
-- **`MPAuthenticator.getAuthorizationToken(authenticator)`**: Displays the authentication modal (if necessary) and returns the `authorizationToken`.
+- **`MPAuthenticator.initializeAuthenticator(amount, payerEmail)`**: Called on page load (by `script.js`) to initialize the `mp.authenticator(amount, payerEmail)` and stores the `authenticatorInstance`.
+- **`MPAuthenticator.getAuthorizationToken()`**: Uses the stored `authenticatorInstance` to call `authenticatorInstance.show()` and returns the `authorizationToken`.
 - **`MPAuthenticator.getAccountPaymentMethods(authorizationToken)`**: Fetches the payment methods available to the user.
 - **`MPAuthenticator.getCardId(authorizationToken, selectedCardPaymentMethodToken)`**: Gets the ID of a saved card.
 - **`MPAuthenticator.createSecureField(cardData, cvvContainerId)`**: Creates and mounts the Mercado Pago Secure Field for CVV collection.
@@ -47,9 +54,10 @@ The Mercado Pago interaction logic is centralized in the `js/mercadoPago.js` fil
 
 The `js/script.js` file is responsible for:
 
-- Manipulating the DOM to render payment methods, input fields (like the CVV container and installment selector).
-- Managing the user interface state (e.g., which payment method is selected).
-- Orchestrating the payment flow from the user's perspective, calling the appropriate methods of `window.MPAuthenticator` to interact with Mercado Pago.
+- Initializing the authenticator on page load by calling `MPAuthenticator.initializeAuthenticator`.
+- Orchestrating the display of payment methods: initially showing a trigger, then upon click, calling `MPAuthenticator.getAuthorizationToken` followed by `MPAuthenticator.getAccountPaymentMethods`.
+- Manipulating the DOM to render the initial trigger, payment methods, input fields (like the CVV container and installment selector).
+- Managing the user interface state (e.g., which payment method is selected, handling loading states).
 - Handling user feedback (alerts, error messages).
 
 ## How to Run
@@ -62,14 +70,13 @@ The `js/script.js` file is responsible for:
 
 ## Key Points for Developers (Mercado Pago Focus)
 
-When analyzing this example, developers should focus on `js/mercadoPago.js` to understand how:
+When analyzing this example, developers should focus on:
 
-- The SDK is initialized.
-- The authentication flow (`mp.authenticator`, `authenticator.show`) is executed to obtain the `authorizationToken`.
-- Payment methods are retrieved.
-- The `card_id` is obtained for a saved card.
-- The CVV `SecureField` is created, mounted, and configured.
-- A `cardToken` is generated from the `card_id` (including the CVV from the Secure Field).
-- `updatePseudotoken` is used to associate the new `cardToken` (with CVV) with the saved card before attempting payment.
+- **`js/mercadoPago.js`**: How the SDK is initialized, and how `initializeAuthenticator`, `getAuthorizationToken`, and `getAccountPaymentMethods` are structured.
+- **`js/script.js`**: How `initializeAuthenticator` is called on page load (`setupInitialView`), and how `getAuthorizationToken` and then `getAccountPaymentMethods` are called sequentially after user interaction (`initializePaymentFlow`).
+- The flow for obtaining the `card_id` for a saved card.
+- The creation and mounting of the CVV `SecureField`.
+- The generation of a `cardToken` using the `card_id` (which includes the CVV from the Secure Field).
+- The use of `updatePseudotoken` to associate the new `cardToken` (with CVV) with the saved card before attempting payment.
 
 This README aims to provide a clear guide to the structure and flow of the Mercado Pago integration in this example project.

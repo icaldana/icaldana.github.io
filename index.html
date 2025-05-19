@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pagamento Mercado Pago</title>
+    <title>Payment with Mercado Pago</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -12,11 +12,10 @@
     <div class="checkout-container">
         <h1>Escolha como pagar</h1>
 
-        <div class="payment-section">
+        <div class="payment-section" id="saved-payment-methods-section" style="display: none;">
             <div class="section-header">
-                <h2>Com Mercado Pago</h2>
-                <img src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/mercadopago-icon.svg"
-                    alt="Mercado Pago" class="mp-logo">
+                <h2>With Mercado Pago</h2>
+                <img src="./assets/mp_logo.svg" alt="Mercado Pago" class="mp-logo">
             </div>
             <div id="account-payment-methods-list">
                 <!-- Payment methods from API will be rendered here by JavaScript -->
@@ -26,11 +25,11 @@
                 style="display: none; margin-top: 0; padding-top: 0;">
                 <!-- CVV and Installments will be rendered here by JavaScript -->
             </div>
-
         </div>
 
         <div class="payment-section" id="other-payment-options-container">
             <div id="other-payment-options-list">
+                <!-- Initial credit card trigger will be rendered here -->
             </div>
         </div>
 

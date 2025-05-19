@@ -1,7 +1,7 @@
-
 let selectedAccountPaymentMethod;
 let authorizationToken = null;
 let securityCodeField = null;
+let initialLoadDone = false;
 
 async function payWithMercadoPago() {
     if (!selectedAccountPaymentMethod || !selectedAccountPaymentMethod.type) {
@@ -305,35 +305,48 @@ function renderStaticPaymentOptions() {
     }
     container.innerHTML = '';
 
-    const staticOptions = [
-        { id: 'new_credit_card', name: 'Credit card', icon: '💳' },
-        { id: 'new_debit_card', name: 'Debit card', icon: '📲' },
-        { id: 'pix', name: 'Pix', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.4999 12.37C15.4999 12.37 15.5 12.37 15.5 12.371C15.5 13.237 14.806 13.931 13.94 13.931L13.938 13.931C13.938 13.931 13.937 13.931 13.936 13.931L10.063 13.931C10.063 13.931 10.062 13.931 10.062 13.931C9.19497 13.931 8.49997 13.238 8.49997 12.371C8.49997 12.37 8.50003 12.37 8.50003 12.37L8.50003 12.371L8.50003 8.49903C8.50003 8.49903 8.50003 8.49903 8.50003 8.49903C8.50003 7.63203 9.19303 6.93803 10.059 6.93803L10.062 6.93803C10.062 6.93803 10.063 6.93803 10.063 6.93803L13.936 6.93803C13.937 6.93803 13.938 6.93803 13.938 6.93803L13.94 6.93803C14.806 6.93803 15.5 7.63203 15.5 8.49903C15.5 8.49903 15.4999 8.49903 15.4999 8.49903L15.4999 12.37ZM12.3219 10.06H11.6779V11.674L10.0619 11.674V12.32H11.6779V13.934H12.3219V12.32H13.9379V11.674L12.3219 11.674V10.06Z" fill="#303030"/><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM0 12C0 5.373 5.373 0 12 0C18.627 0 24 5.373 24 12C24 18.627 18.627 24 12 24C5.373 24 0 18.627 0 12Z" fill="#303030"/></svg>' }
-    ];
+    const creditCardOption = {
+        id: 'new_credit_card',
+        name: 'Credit Card',
+        icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4C2.89 4 2.01 4.89 2.01 6L2 18C2 19.11 2.89 20 4 20H20C21.11 20 22 19.11 22 18V6C22 4.89 21.11 4 20 4ZM20 18H4V12H20V18ZM20 8H4V6H20V8Z" fill="#333333"/></svg>'
+    };
 
-    staticOptions.forEach((option, index) => {
-        const elementIdSuffix = `static-${option.id}-${index}`;
-        const divId = `option-div-${elementIdSuffix}`;
-        const radioId = `pm-radio-${elementIdSuffix}`;
+    const divId = `option-div-static-${creditCardOption.id}`;
+    const radioId = `pm-radio-static-${creditCardOption.id}`;
+    const iconHtml = `<div class="payment-icon credit-card-icon">${creditCardOption.icon}</div>`;
 
-        const iconHtml = `<div class="static-option-icon">${option.icon}</div>`;
-
-        const optionHtml = `
-            <div class="payment-option static-option" id="${divId}">
-                <input type="radio" name="payment-method" id="${radioId}" value="${option.id}">
-                ${iconHtml}
-                <div class="payment-details">
-                    <label for="${radioId}" class="payment-title">${option.name}</label>
-                </div>
+    const optionHtml = `
+        <div class="payment-option static-option" id="${divId}" style="border-top: 1px solid #eeeeee;">
+            <input type="radio" name="payment-method" id="${radioId}" value="${creditCardOption.id}">
+            ${iconHtml}
+            <div class="payment-details">
+                <label for="${radioId}" class="payment-title">${creditCardOption.name}</label>
             </div>
-        `;
-        container.insertAdjacentHTML('beforeend', optionHtml);
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', optionHtml);
 
-        const optionDiv = document.getElementById(divId);
-        if (optionDiv) {
-            optionDiv.onclick = () => updateSelection(divId, radioId, false, option);
+    const optionDiv = document.getElementById(divId);
+    if (optionDiv) {
+        if (!initialLoadDone) {
+            optionDiv.onclick = async () => {
+                const savedMethodsSection = document.getElementById('saved-payment-methods-section');
+                if (savedMethodsSection) {
+                    savedMethodsSection.style.display = 'block';
+                }
+                optionDiv.innerHTML = `<div class="payment-icon credit-card-icon">${creditCardOption.icon}</div><div class="payment-details"><label class="payment-title">Loading...</label></div>`;
+                optionDiv.onclick = null;
+
+                await initializePaymentFlow();
+            };
+        } else {
+            optionDiv.onclick = () => {
+                updateSelection(divId, radioId, false, creditCardOption);
+                console.log('Selected option to add a new credit card.');
+                manageCardDetailsArea(true, { type: 'new_credit_card' });
+            };
         }
-    });
+    }
 }
 
 async function initializePaymentFlow() {
@@ -346,7 +359,7 @@ async function initializePaymentFlow() {
                 "type": "account_money",
                 "thumbnail": "http://img.mlstatic.com/org-img/MP3/API/logos/2007.gif",
                 "issuer": {
-                    "name": "Dinheiro na minha conta do MercadoPago\"", // Note: check this escaped quote in real data
+                    "name": "Dinheiro na minha conta do MercadoPago\"",
                     "id": 2007,
                     "default": false
                 }
@@ -368,27 +381,56 @@ async function initializePaymentFlow() {
         ]
     };
 
-    // To use the live API call, uncomment the following lines:
-    /*
     try {
-        const result = await MPAuthenticator.initializePaymentData(); // Alterado de MercadoPagoService
-        if (result && result.accountPaymentMethodsResponse) {
-            authorizationToken = result.authorizationToken;
-            renderPaymentMethods(result.accountPaymentMethodsResponse);
+        const accountPaymentMethodsContainer = document.getElementById('account-payment-methods-list');
+        if (accountPaymentMethodsContainer) {
+            accountPaymentMethodsContainer.innerHTML = '<p>Loading payment methods from your account...</p>';
+        }
+
+        authorizationToken = await MPAuthenticator.getAuthorizationToken();
+        const accountPaymentMethodsResponse = await MPAuthenticator.getAccountPaymentMethods(authorizationToken);
+        if (accountPaymentMethodsResponse) {
+            renderPaymentMethods(accountPaymentMethodsResponse);
         } else {
             console.error("Failed to fetch payment methods or authorization token from MPAuthenticator.");
-            const container = document.getElementById('account-payment-methods-list');
-            if (container) container.innerHTML = '<p>Erro ao carregar dados de pagamento. Tente recarregar.</p>';
+            if (accountPaymentMethodsContainer) {
+                accountPaymentMethodsContainer.innerHTML = '<p>Error loading payment data. Please try reloading.</p>';
+            }
         }
     } catch (error) {
         console.error("Failed to process or render payment methods via MPAuthenticator:", error);
-        const container = document.getElementById('account-payment-methods-list');
-        if (container) container.innerHTML = '<p>Erro ao carregar meios de pagamento. Tente novamente mais tarde.</p>';
+        const accountPaymentMethodsContainer = document.getElementById('account-payment-methods-list');
+        if (accountPaymentMethodsContainer) {
+            accountPaymentMethodsContainer.innerHTML = '<p>Error loading payment methods. Please try again later.</p>';
+        }
     }
-    */
 
-    renderPaymentMethods(exampleApiResponse);
+    // Comment out the direct call with exampleApiResponse if the live API call is intended to be primary
+    //renderPaymentMethods(exampleApiResponse);
+
+    initialLoadDone = true;
     renderStaticPaymentOptions();
 }
 
-document.addEventListener('DOMContentLoaded', initializePaymentFlow);
+async function setupInitialView() {
+    initialLoadDone = false;
+
+
+    const payerEmail = "test_user_1413841135@testuser.com";
+    const totalAmount = "200.00";
+
+    try {
+        await MPAuthenticator.initializeAuthenticator(totalAmount, payerEmail);
+    } catch (error) {
+        console.error("Script: Error during start call in setupInitialView:", error);
+        const otherOptionsContainer = document.getElementById('other-payment-options-list');
+        if (otherOptionsContainer) {
+            otherOptionsContainer.innerHTML = "<p style='color:red;'>Could not prepare payment options. Please refresh.</p>";
+            return;
+        }
+    }
+
+    renderStaticPaymentOptions();
+}
+
+document.addEventListener('DOMContentLoaded', setupInitialView);

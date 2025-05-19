@@ -4,32 +4,25 @@ window.MPAuthenticator = (function () {
         locale: "pt-BR",
     });
 
-    async function initializePaymentData() {
-        const payerEmail = "test_user_1413841135@testuser.com";
-        const totalAmount = "200.00";
-
-        const authenticator = await initializeAuthenticator(totalAmount, payerEmail);
-        const authorizationToken = await getAuthorizationToken(authenticator);
-        const accountPaymentMethodsResponse = await getAccountPaymentMethods(authorizationToken);
-
-        return { accountPaymentMethodsResponse, authorizationToken };
-    }
+    let authenticatorInstance = null;
 
     async function initializeAuthenticator(amount, payerEmail) {
         try {
             // Starts the authentication flow using the payer's email and amount
-            const authenticator = await mp.authenticator(amount, payerEmail);
-            return authenticator;
+            authenticatorInstance = await mp.authenticator(amount, payerEmail);
+            return authenticatorInstance;
         } catch (error) {
-            console.log({ message: error.message, errorCode: error?.errorCode });
-            throw error;
+            console.error({ message: error.message, errorCode: error?.errorCode })
         }
     }
 
-    async function getAuthorizationToken(authenticator) {
+
+
+
+    async function getAuthorizationToken() {
         try {
             // Shows the authentication modal flow and returns the token
-            const authorizationToken = await authenticator.show();
+            const authorizationToken = await authenticatorInstance.show();
             return authorizationToken;
         } catch (error) {
             console.log({ message: error.message, errorCode: error?.errorCode });
@@ -77,6 +70,7 @@ window.MPAuthenticator = (function () {
             return cardToken;
         } catch (error) {
             console.error("Error while generating card token:", error);
+            // Consider re-throwing or returning a specific error object/value
         }
     }
 
@@ -90,10 +84,11 @@ window.MPAuthenticator = (function () {
         }
     }
 
-
     return {
         mp: mp,
-        initializePaymentData,
+        initializeAuthenticator,
+        getAuthorizationToken,
+        getAccountPaymentMethods,
         createSecureField,
         getCardId,
         getCardToken,
