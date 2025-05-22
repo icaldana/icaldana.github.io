@@ -18,26 +18,21 @@ async function payWithMercadoPago() {
         const isCVVMandatory = cardData.security_code_settings && cardData.security_code_settings.mode === 'mandatory';
 
         if (isCVVMandatory) {
-
             try {
                 const cardId = await MPAuthenticator.getCardId(authorizationToken, cardData.token);
-
                 const cardTokenResponse = await MPAuthenticator.getCardToken(cardId);
+
                 if (!cardTokenResponse) {
                     alert("Could not generate card token from CVV. Please verify the CVV and try again.");
                     return;
                 }
-                await MPAuthenticator.updatePaymentMethodToken(authorizationToken, cardData.token, cardTokenResponse);
 
+                await MPAuthenticator.updatePaymentMethodToken(authorizationToken, cardData.token, cardTokenResponse);
             } catch (error) {
                 console.error("Error during Mercado Pago card processing via MPAuthenticator:", error);
                 return;
             }
         }
-    }
-
-    if (selectedPaymentMethod.type === 'credit_card') {
-        const cardData = selectedPaymentMethod;
 
         // Installments Validation
         const installmentsAvailable = cardData.installments && cardData.installments.length > 0;
@@ -133,10 +128,11 @@ function updatePaymentOptionUI(selectedOptionDivId, associatedRadioId) {
     if (radioToSelect) radioToSelect.checked = true;
 
     const cardDetailsArea = document.getElementById('card-details-input-area');
-    if (selectedDiv && cardDetailsArea && selectedDiv.parentNode !== cardDetailsArea.parentNode) {
-        if (selectedDiv.classList.contains('selected') && cardDetailsArea.style.display === 'block') {
-            selectedDiv.parentNode.insertBefore(cardDetailsArea, selectedDiv.nextSibling);
-        }
+    if (selectedDiv && cardDetailsArea &&
+        selectedDiv.parentNode !== cardDetailsArea.parentNode &&
+        selectedDiv.classList.contains('selected') &&
+        cardDetailsArea.style.display === 'block') {
+        selectedDiv.parentNode.insertBefore(cardDetailsArea, selectedDiv.nextSibling);
     }
 }
 
@@ -184,7 +180,7 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
         containerDiv.insertAdjacentHTML('beforeend', cvvHtml);
 
         try {
-            if (securityCodeField) securityCodeField?.unmount();
+            if (securityCodeField) securityCodeField.unmount();
             securityCodeField = MPAuthenticator.createSecureField(cardDataItem, cvvContainerId);
 
         } catch (error) {
@@ -193,9 +189,6 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
             if (cvvMountElement) cvvMountElement.innerHTML = `<p style="color:red;">${error.message || 'Error creating or mounting secure field.'}</p>`;
             securityCodeField = null;
         }
-
-    } else {
-        if (securityCodeField) securityCodeField?.unmount();
     }
 
     // Installments Dropdown
@@ -208,13 +201,11 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
             let text = `${inst.installments}x of R$${parseFloat(inst.installment_amount).toFixed(2).replace('.', ',')}`;
             if (inst.installment_rate === 0 && inst.installments > 1) {
                 text += ' without interest';
-            } else if (inst.installments === 1) {
-            } else if (inst.total_amount && parseFloat(inst.total_amount) > parseFloat(cardDataItem.total_amount || '0')) {
             }
             optionsHtml += `<option value="${index}">${text}</option>`;
         });
 
-        let installmentsHtml = `
+        const installmentsHtml = `
             <div class="card-input-group">
                 <label for="${installmentsSelectId}">${installmentsLabelText}</label>
                 <select id="${installmentsSelectId}">
@@ -227,12 +218,10 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
         const installmentsSelect = document.getElementById(installmentsSelectId);
         if (installmentsSelect) {
             installmentsSelect.onchange = () => {
-                if (installmentsSelect.value === '') {
-                    selectedInstallment = null;
-                } else {
-                    selectedInstallment = cardDataItem.installments[parseInt(installmentsSelect.value)];
-                    console.log('Installment selected:', selectedInstallment);
-                }
+                selectedInstallment = installmentsSelect.value === ''
+                    ? null
+                    : cardDataItem.installments[parseInt(installmentsSelect.value)];
+                console.log('Installment selected:', selectedInstallment);
             };
             // Auto-select if only one actual installment option (excluding the default "Select an option")
             if (cardDataItem.installments.length === 1) {
@@ -241,7 +230,13 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
             }
         }
     }
+}
 
+// Helper function to show error messages consistently
+function showErrorMessage(container, message) {
+    if (container) {
+        container.innerHTML = `<p>${message}</p>`;
+    }
 }
 
 function renderPaymentMethods(apiResponse) {
@@ -252,13 +247,15 @@ function renderPaymentMethods(apiResponse) {
     }
     container.innerHTML = '';
 
-    if (!apiResponse || !apiResponse.data || !Array.isArray(apiResponse.data)) {
+    // Validate API response
+    if (!apiResponse?.data || !Array.isArray(apiResponse.data)) {
         console.error('Invalid API response format for payment methods.', apiResponse);
-        container.innerHTML = '<p>It was not possible to load the saved payment methods.</p>';
+        showErrorMessage(container, 'It was not possible to load the saved payment methods.');
         return;
     }
+
     if (apiResponse.data.length === 0) {
-        container.innerHTML = '<p>No saved payment methods found.</p>';
+        showErrorMessage(container, 'No saved payment methods found.');
         return;
     }
 
@@ -267,36 +264,8 @@ function renderPaymentMethods(apiResponse) {
         const divId = `option-div-${elementIdSuffix}`;
         const radioId = `pm-radio-${elementIdSuffix}`;
 
-        let iconHtml = `<img src="${item.thumbnail}" alt="${item.name || 'Payment method icon'}">`;
-        let title = item.name;
-        let subtitle = '';
-        let subtitleClass = '';
-        let iconWrapperClass = 'payment-icon';
-
-        if (item.type === 'account_money') {
-            title = item.name;
-            subtitle = 'Available for this purchase';
-            subtitleClass = 'info';
-            iconWrapperClass += ' account-money-icon-bg';
-        } else if (item.type === 'credit_card' && item.card && item.issuer) {
-            title = `${item.issuer.name} **** ${item.card.card_number.last_four_digits}`;
-            let maxZeroRateInstallments = 0;
-            if (item.installments && Array.isArray(item.installments)) {
-                const zeroRateOptions = item.installments.filter(inst => inst.installment_rate === 0 && inst.installments > 1);
-                if (zeroRateOptions.length > 0) {
-                    maxZeroRateInstallments = Math.max(...zeroRateOptions.map(inst => inst.installments));
-                }
-            }
-            if (maxZeroRateInstallments > 1) {
-                subtitle = `Up to ${maxZeroRateInstallments}x without interest`;
-            } else if (item.installments && item.installments.some(inst => inst.installments > 1)) {
-                subtitle = 'Installment available';
-            } else if (item.installments && item.installments.length > 0) {
-                subtitle = 'Payment in 1x';
-            }
-        } else {
-            title = item.name || 'Unknown payment option';
-        }
+        // Format payment method details
+        const { iconHtml, title, subtitle, subtitleClass, iconWrapperClass } = formatPaymentMethodDetails(item);
 
         const paymentMethodHtml = `
             <div class="payment-option" id="${divId}">
@@ -317,6 +286,42 @@ function renderPaymentMethods(apiResponse) {
             paymentMethodDiv.onclick = () => updateSelection(divId, radioId, true, item);
         }
     });
+}
+
+function formatPaymentMethodDetails(item) {
+    const iconHtml = `<img src="${item.thumbnail}" alt="${item.name || 'Payment method icon'}">`;
+    let title = item.name;
+    let subtitle = '';
+    let subtitleClass = '';
+    let iconWrapperClass = 'payment-icon';
+
+    if (item.type === 'account_money') {
+        subtitle = 'Available for this purchase';
+        subtitleClass = 'info';
+        iconWrapperClass += ' account-money-icon-bg';
+    } else if (item.type === 'credit_card' && item.card && item.issuer) {
+        title = `${item.issuer.name} **** ${item.card.card_number.last_four_digits}`;
+
+        // Calculate installment options
+        if (item.installments && Array.isArray(item.installments)) {
+            const zeroRateOptions = item.installments.filter(inst => inst.installment_rate === 0 && inst.installments > 1);
+            const maxZeroRateInstallments = zeroRateOptions.length > 0
+                ? Math.max(...zeroRateOptions.map(inst => inst.installments))
+                : 0;
+
+            if (maxZeroRateInstallments > 1) {
+                subtitle = `Up to ${maxZeroRateInstallments}x without interest`;
+            } else if (item.installments.some(inst => inst.installments > 1)) {
+                subtitle = 'Installment available';
+            } else if (item.installments.length > 0) {
+                subtitle = 'Payment in 1x';
+            }
+        }
+    } else {
+        title = item.name || 'Unknown payment option';
+    }
+
+    return { iconHtml, title, subtitle, subtitleClass, iconWrapperClass };
 }
 
 function renderStaticPaymentOptions() {
@@ -370,7 +375,6 @@ function renderStaticPaymentOptions() {
 }
 
 async function initializePaymentFlow() {
-
     try {
         const accountPaymentMethodsContainer = document.getElementById('account-payment-methods-list');
         if (accountPaymentMethodsContainer) {
@@ -379,22 +383,18 @@ async function initializePaymentFlow() {
 
         authorizationToken = await MPAuthenticator.getAuthorizationToken();
         const accountPaymentMethodsResponse = await MPAuthenticator.getAccountPaymentMethods(authorizationToken);
+
         if (accountPaymentMethodsResponse) {
             renderPaymentMethods(accountPaymentMethodsResponse);
         } else {
             console.error("Failed to fetch payment methods or authorization token from MPAuthenticator.");
-            if (accountPaymentMethodsContainer) {
-                accountPaymentMethodsContainer.innerHTML = '<p>Error loading payment data. Please try reloading.</p>';
-            }
+            showErrorMessage(accountPaymentMethodsContainer, 'Error loading payment data. Please try reloading.');
         }
     } catch (error) {
         console.error("Failed to process or render payment methods via MPAuthenticator:", error);
         const accountPaymentMethodsContainer = document.getElementById('account-payment-methods-list');
-        if (accountPaymentMethodsContainer) {
-            accountPaymentMethodsContainer.innerHTML = '<p>Error loading payment methods. Please try again later.</p>';
-        }
+        showErrorMessage(accountPaymentMethodsContainer, 'Error loading payment methods. Please try again later.');
     }
-
 
     initialLoadDone = true;
     renderStaticPaymentOptions();
@@ -413,11 +413,8 @@ async function setupInitialView() {
         if (otherOptionsContainer) otherOptionsContainer.innerHTML = '';
     } catch (error) {
         console.error("Script: Error during start call in setupInitialView:", error);
-        const otherOptionsContainer = document.getElementById('other-payment-options-list');
-        if (otherOptionsContainer) {
-            otherOptionsContainer.innerHTML = `<p style='color:red;'>${error.message}</p>`;
-            return;
-        }
+        showErrorMessage(otherOptionsContainer, error.message);
+        return;
     }
 
     renderStaticPaymentOptions();
