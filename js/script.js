@@ -93,11 +93,11 @@ async function payWithMercadoPago() {
 
         const data = await response.json();
         console.log("Payment response (simulated):", data);
-        alert("Pagamento processado com sucesso! (simulado - verifique o console)");
+        alert("Payment processed successfully! (simulated - check the console)");
 
     } catch (error) {
         console.error("Payment processing fetch/network error:", error);
-        alert("Erro de comunicação ao processar pagamento (simulado - verifique o console).");
+        alert("Communication error while processing payment (simulated - check the console).");
     }
 }
 
@@ -181,6 +181,9 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
 
         try {
             if (securityCodeField) securityCodeField.unmount();
+
+            // We recommend the implementation of Secure Fields events described in the following link:
+            // https://github.com/mercadopago/sdk-js/blob/main/docs/fields.md#field-instanceonevent-callback
             securityCodeField = MPAuthenticator.createSecureField(cardDataItem, cvvContainerId);
 
         } catch (error) {
