@@ -1,29 +1,33 @@
-let selectedAccountPaymentMethod;
+const payerEmail = "test_user_1771046888@testuser.com";
+const totalAmount = "3.00";
+
+let selectedPaymentMethod;
+let selectedInstallment = null;
 let authorizationToken = null;
 let securityCodeField = null;
 let initialLoadDone = false;
 
 async function payWithMercadoPago() {
-    if (!selectedAccountPaymentMethod || !selectedAccountPaymentMethod.type) {
+    if (!selectedPaymentMethod || !selectedPaymentMethod.type) {
         alert("Please select a payment method.");
         return;
     }
 
-    if (selectedAccountPaymentMethod.type === 'credit_card') {
-        const cardData = selectedAccountPaymentMethod;
+    if (selectedPaymentMethod.type === 'credit_card') {
+        const cardData = selectedPaymentMethod;
         const isCVVMandatory = cardData.security_code_settings && cardData.security_code_settings.mode === 'mandatory';
 
         if (isCVVMandatory) {
+
             try {
                 const cardId = await MPAuthenticator.getCardId(authorizationToken, cardData.token);
 
                 const cardTokenResponse = await MPAuthenticator.getCardToken(cardId);
-                if (!cardTokenResponse || !cardTokenResponse.id) {
+                if (!cardTokenResponse) {
                     alert("Could not generate card token from CVV. Please verify the CVV and try again.");
                     return;
                 }
-                const cvvCardToken = cardTokenResponse.id;
-                await MPAuthenticator.updateSelectedCardToken(authorizationToken, cardData.token, cvvCardToken);
+                await MPAuthenticator.updatePaymentMethodToken(authorizationToken, cardData.token, cardTokenResponse);
 
             } catch (error) {
                 console.error("Error during Mercado Pago card processing via MPAuthenticator:", error);
@@ -32,33 +36,56 @@ async function payWithMercadoPago() {
         }
     }
 
-    if (selectedAccountPaymentMethod.type === 'credit_card') {
-        const cardData = selectedAccountPaymentMethod;
+    if (selectedPaymentMethod.type === 'credit_card') {
+        const cardData = selectedPaymentMethod;
 
         // Installments Validation
         const installmentsAvailable = cardData.installments && cardData.installments.length > 0;
         if (installmentsAvailable) {
-            if (!cardData.selected_installment && cardData.installments.length > 1) {
+            if (!selectedInstallment && cardData.installments.length > 1) {
                 alert("Please select the number of installments.");
                 document.getElementById('installmentsSelect')?.focus();
                 return;
             }
-            if (!cardData.selected_installment && cardData.installments.length === 1) {
+            if (!selectedInstallment && cardData.installments.length === 1) {
                 console.warn("Single installment option was not auto-selected. Proceeding with the single option.");
-                selectedAccountPaymentMethod.selected_installment = cardData.installments[0];
+                selectedInstallment = cardData.installments[0];
             }
         }
     }
 
     try {
-        // In a real application, send selectedAccountPaymentMethod to your backend
+        // In a real application, send the selected payment method to your backend
         // The endpoint /process-payment is a placeholder for your backend logic.
-        const response = await fetch("process-payment", {
+        // For more information on the Order API parameters, see:
+        // https://www.mercadopago.com/developers/en/reference/orders/online-payments/create/post
+
+        const response = await fetch("/process-payment", {
             method: "POST",
             headers: {
                 "Content-type": "application/json; charset=UTF-8",
             },
-            body: JSON.stringify(selectedAccountPaymentMethod),
+            body: JSON.stringify({
+                type: "online",
+                external_reference: "{{EXTERNAL_REFERENCE}}",
+                total_amount: totalAmount,
+                payer: {
+                    email: payerEmail,
+                },
+                transactions: {
+                    payments: [
+                        {
+                            amount: totalAmount,
+                            payment_method: {
+                                id: selectedPaymentMethod.id,
+                                type: selectedPaymentMethod.type,
+                                token: selectedPaymentMethod.token,
+                                installments: selectedInstallment?.installments
+                            },
+                        },
+                    ],
+                },
+            }),
         });
 
         if (!response.ok) {
@@ -87,7 +114,6 @@ function manageCardDetailsArea(show, cardDataItem = null) {
         renderCardSpecificInputs(cardDataItem, cardDetailsArea);
         cardDetailsArea.style.display = 'block';
     } else {
-        securityCodeField?.unmount();
         cardDetailsArea.innerHTML = '';
         cardDetailsArea.style.display = 'none';
     }
@@ -118,8 +144,7 @@ function updateSelection(selectedOptionDivId, associatedRadioId, isAccountMethod
     updatePaymentOptionUI(selectedOptionDivId, associatedRadioId);
 
     if (isAccountMethod) {
-        selectedAccountPaymentMethod = { ...dataItem };
-        console.log('Selected account payment method:', selectedAccountPaymentMethod);
+        selectedPaymentMethod = { ...dataItem };
 
         if (dataItem.type === 'credit_card') {
             manageCardDetailsArea(true, dataItem);
@@ -130,36 +155,36 @@ function updateSelection(selectedOptionDivId, associatedRadioId, isAccountMethod
             }
         } else {
             manageCardDetailsArea(false);
-            delete selectedAccountPaymentMethod.cvv;
-            delete selectedAccountPaymentMethod.selected_installment;
+            selectedInstallment = null;
+            delete selectedPaymentMethod.cvv;
         }
     } else {
-        selectedAccountPaymentMethod = { type: dataItem.id, name: dataItem.name };
-        console.log('Selected static option:', selectedAccountPaymentMethod.name, ". 'selectedAccountPaymentMethod' updated.");
+        selectedPaymentMethod = { type: dataItem.id, name: dataItem.name };
         manageCardDetailsArea(false);
+        selectedInstallment = null;
     }
 }
 
 function renderCardSpecificInputs(cardDataItem, containerDiv) {
     containerDiv.innerHTML = '';
 
-    if (cardDataItem.type === 'credit_card' && cardDataItem.security_code_settings && cardDataItem.security_code_settings.mode === 'mandatory') {
+    const isCreditCard = cardDataItem.type === 'credit_card';
+    const isCVVMandatory = cardDataItem.security_code_settings && cardDataItem.security_code_settings.mode === 'mandatory';
+
+    if (isCreditCard && isCVVMandatory) {
         const cvvContainerId = 'mercadopago-cvv-container';
         const cvvLabelText = 'Security code';
 
         const cvvHtml = `
             <div class="card-input-group">
                 <label>${cvvLabelText}</label> 
-                <div id="${cvvContainerId}" class="cvv-input-sdk-container"></div>
+                <div id="${cvvContainerId}" class="cvv-input-sdk-container secure-fields"></div>
             </div>
         `;
         containerDiv.insertAdjacentHTML('beforeend', cvvHtml);
 
         try {
-            if (securityCodeField && typeof securityCodeField.destroy === 'function') {
-                securityCodeField.destroy();
-                securityCodeField = null;
-            }
+            if (securityCodeField) securityCodeField?.unmount();
             securityCodeField = MPAuthenticator.createSecureField(cardDataItem, cvvContainerId);
 
         } catch (error) {
@@ -170,10 +195,7 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
         }
 
     } else {
-        if (securityCodeField && typeof securityCodeField.destroy === 'function') {
-            try { securityCodeField.destroy(); } catch (e) { console.warn("Error destroying secure field:", e); }
-            securityCodeField = null;
-        }
+        if (securityCodeField) securityCodeField?.unmount();
     }
 
     // Installments Dropdown
@@ -206,11 +228,10 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
         if (installmentsSelect) {
             installmentsSelect.onchange = () => {
                 if (installmentsSelect.value === '') {
-                    delete selectedAccountPaymentMethod.selected_installment;
-                    console.log('Installment selection cleared');
+                    selectedInstallment = null;
                 } else {
-                    selectedAccountPaymentMethod.selected_installment = cardDataItem.installments[parseInt(installmentsSelect.value)];
-                    console.log('Installment selected:', selectedAccountPaymentMethod.selected_installment);
+                    selectedInstallment = cardDataItem.installments[parseInt(installmentsSelect.value)];
+                    console.log('Installment selected:', selectedInstallment);
                 }
             };
             // Auto-select if only one actual installment option (excluding the default "Select an option")
@@ -220,6 +241,7 @@ function renderCardSpecificInputs(cardDataItem, containerDiv) {
             }
         }
     }
+
 }
 
 function renderPaymentMethods(apiResponse) {
@@ -316,7 +338,7 @@ function renderStaticPaymentOptions() {
     const iconHtml = `<div class="payment-icon credit-card-icon">${creditCardOption.icon}</div>`;
 
     const optionHtml = `
-        <div class="payment-option static-option" id="${divId}" style="border-top: 1px solid #eeeeee;">
+        <div class="payment-option static-option" id="${divId}">
             <input type="radio" name="payment-method" id="${radioId}" value="${creditCardOption.id}">
             ${iconHtml}
             <div class="payment-details">
@@ -331,10 +353,8 @@ function renderStaticPaymentOptions() {
         if (!initialLoadDone) {
             optionDiv.onclick = async () => {
                 const savedMethodsSection = document.getElementById('saved-payment-methods-section');
-                if (savedMethodsSection) {
-                    savedMethodsSection.style.display = 'block';
-                }
-                optionDiv.innerHTML = `<div class="payment-icon credit-card-icon">${creditCardOption.icon}</div><div class="payment-details"><label class="payment-title">Loading...</label></div>`;
+                if (savedMethodsSection) savedMethodsSection.style.display = 'block';
+                optionDiv.innerHTML = null;
                 optionDiv.onclick = null;
 
                 await initializePaymentFlow();
@@ -350,41 +370,11 @@ function renderStaticPaymentOptions() {
 }
 
 async function initializePaymentFlow() {
-    const exampleApiResponse = {
-        "data": [
-            {
-                "id": "account_money",
-                "token": "STPRAPI01JTNT3WMMQVV5E573FAQVBY10",
-                "name": "Saldo no Mercado Pago",
-                "type": "account_money",
-                "thumbnail": "http://img.mlstatic.com/org-img/MP3/API/logos/2007.gif",
-                "issuer": {
-                    "name": "Dinheiro na minha conta do MercadoPago\"",
-                    "id": 2007,
-                    "default": false
-                }
-            },
-            {
-                "id": "master",
-                "token": "STPRAPI01JTNT3WMMQVV5E573FAMPS0A0",
-                "name": "Mastercard",
-                "type": "credit_card",
-                "thumbnail": "https://http2.mlstatic.com/storage/logos-api-admin/0daa1670-5c81-11ec-ae75-df2bef173be2-xl.png",
-                "security_code_settings": { "mode": "mandatory", "length": 3 },
-                "card": { "card_number": { "last_four_digits": "6351", "bin": "50314332", "length": 16 } },
-                "issuer": { "name": "Mastercard", "id": 24, "default": true },
-                "installments": [
-                    { "total_amount": "10", "installment_amount": "10", "installment_rate_collector": ["MERCADOPAGO"], "installments": 1, "max_allowed_amount": 60000, "min_allowed_amount": 0.5, "installment_rate": 0 },
-                    { "total_amount": "10.96", "installment_amount": "5.48", "installment_rate_collector": ["MERCADOPAGO"], "installments": 2, "max_allowed_amount": 60000, "min_allowed_amount": 10, "installment_rate": 9.64 }
-                ]
-            }
-        ]
-    };
 
     try {
         const accountPaymentMethodsContainer = document.getElementById('account-payment-methods-list');
         if (accountPaymentMethodsContainer) {
-            accountPaymentMethodsContainer.innerHTML = '<p>Loading payment methods from your account...</p>';
+            accountPaymentMethodsContainer.innerHTML = '<div class="loading-container"><div class="spinner"></div></div>';
         }
 
         authorizationToken = await MPAuthenticator.getAuthorizationToken();
@@ -405,8 +395,6 @@ async function initializePaymentFlow() {
         }
     }
 
-    // Comment out the direct call with exampleApiResponse if the live API call is intended to be primary
-    //renderPaymentMethods(exampleApiResponse);
 
     initialLoadDone = true;
     renderStaticPaymentOptions();
@@ -415,17 +403,19 @@ async function initializePaymentFlow() {
 async function setupInitialView() {
     initialLoadDone = false;
 
-
-    const payerEmail = "test_user_1413841135@testuser.com";
-    const totalAmount = "200.00";
+    const otherOptionsContainer = document.getElementById('other-payment-options-list');
+    if (otherOptionsContainer) {
+        otherOptionsContainer.innerHTML = '<div class="loading-container"><div class="spinner"></div></div>';
+    }
 
     try {
         await MPAuthenticator.initializeAuthenticator(totalAmount, payerEmail);
+        if (otherOptionsContainer) otherOptionsContainer.innerHTML = '';
     } catch (error) {
         console.error("Script: Error during start call in setupInitialView:", error);
         const otherOptionsContainer = document.getElementById('other-payment-options-list');
         if (otherOptionsContainer) {
-            otherOptionsContainer.innerHTML = "<p style='color:red;'>Could not prepare payment options. Please refresh.</p>";
+            otherOptionsContainer.innerHTML = `<p style='color:red;'>${error.message}</p>`;
             return;
         }
     }

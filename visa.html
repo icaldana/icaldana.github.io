@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Click To Pay</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jose/5.9.6/index.umd.min.js"></script>
+    <style>
+        .store-container {
+            padding: 20px;
+            background-color: #f3f3f3;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #loading {
+            display: block;
+            font-size: 1.17em;
+            margin-block-start: 1em;
+            margin-block-end: 1em;
+            font-weight: bold;
+        }
+
+        #result {
+            width: 100%;
+            height: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Visa | Click to Pay</h1>
+    </header>
+    <section class="store-container">
+        <h1>Integration validation for Unrecognized </h1>
+        <div class="container">
+            <div id="loading">
+            </div>
+            <textarea id="result">
+      </textarea>
+        </div>
+    </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dpaId = '7e61d708-0359-007f-c66b-1ec462295f02';
+            const visaRawPK = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxpjzmHuo4Ju+c9IlHPu4Av4q/MPzzW2zAx8H1e3v3JC83FPDuqcL9SN1LqKfyLpBP3CgrBUm7QViA5whhFDGRJctbKtSeIsTLiTZ4eDW8ED4WG4Q1eTGrbcyF16ZSfDZ/tzbTddfY0xfdePsIFMXhy9+GKILVX7mCTtmGMg1lcyOxhntWq9h50NhxMeUXaIbXJsOkZKhnmz9vG5dcpPSiIFz7brIwJl7yeIPPJYclgvZeYtgRNG4g7MaKvgB8qHVGF5avvGOVk002sAK5XcS3X7/j46Y0zX2pWR3HPLtE4dITMqbyJyBUbBj8WTsSEWfQb60/G3nZ9QTGHIYORc+6QIDAQAB';
+            const apiKey = 'BTRFJIXCH3UJG4FZ5D9421LrH01ax57m_O30umSFMDWr5rFvk';
+            const dpaClientId = '8abd6568-fc74-52ba-e471-1f6ac9f1a902';
+            const visaSDKUrl = 'https://sandbox.secure.checkout.visa.com/checkout-widget/resources/js/integration/v2/sdk.js';
+            const cardBrands = 'visa,mastercard';
+
+            function startVisaSDK() {
+                const buildedUrl = `${visaSDKUrl}?dpaId=${apiKey}&locale=en_US&cardBrands=${cardBrands}&dpaClientId=${dpaClientId}`;
+                const script_visa = document.createElement('script');
+                console.log('### Builded URL', buildedUrl);
+                script_visa.src = buildedUrl;
+                document.body.appendChild(script_visa);
+            }
+
+            const encryptCardData = async (cardObject, visaPublicKey) => {
+                console.log('### Card data to encrypt', cardObject);
+
+                try {
+                    const jose = window.joseLibrary || window.jose;
+                    const pemFormattedKey = `-----BEGIN PUBLIC KEY-----\n${visaPublicKey}\n-----END PUBLIC KEY-----`;
+                    console.log('### Formatted PEM Key: \n', pemFormattedKey);
+
+                    const publicKey = await jose.importSPKI(pemFormattedKey, 'RSA-OAEP-256');
+                    const jwe = await new jose.CompactEncrypt(
+                        new TextEncoder().encode(JSON.stringify(cardObject)),
+                    )
+                        .setProtectedHeader({ alg: 'RSA-OAEP-256', enc: 'A256GCM' })
+                        .encrypt(publicKey);
+
+                    return jwe;
+                } catch (error) {
+                    console.error('Card encryption error:', error);
+                    return null;
+                }
+            }
+
+            startVisaSDK();
+            setTimeout(async () => {
+                try {
+                    console.log('### Initializing SDK...');
+                    document.getElementById('loading').innerHTML = 'Loading SDK...';
+                    await window.VSDK.initialize({});
+                    console.log('### SDK initialized!');
+                    document.getElementById('loading').innerHTML = 'SDK initialized!';
+
+                    console.log('### Getting cards...');
+                    document.getElementById('loading').innerHTML = 'Getting cards...';
+                    const cardsResponse = await window.VSDK.getCards({
+                        "consumerIdentity": {
+                            "identityProvider": "SRC",
+                            "identityType": "EMAIL_ADDRESS",
+                            "identityValue": "alice.doe@mercadolivre.com"
+                        }
+                    });
+                    console.log('### Cards response', cardsResponse);
+                    document.getElementById('loading').innerHTML = 'Cards loaded!';
+
+                    console.log('### Encrypting card...');
+                    document.getElementById('loading').innerHTML = 'Encrypting card...';
+                    const encryptedCard = await encryptCardData({
+                        "primaryAccountNumber": "5031433215406351",
+                        "panExpirationMonth": "11",
+                        "panExpirationYear": "2030",
+                        "cardholderFullName": "Alice Doe",
+                        "cardSecurityCode": "123",
+                        "billingAddress": {
+                            "line1": "Av das Nacoes Unidas 3003",
+                            "city": "Osasco",
+                            "state": "SP",
+                            "zip": "06233903",
+                            "countryCode": "BR"
+                        }
+                    }, visaRawPK);
+                    console.log('### Encrypted card!');
+                    document.getElementById('loading').innerHTML = 'Card encrypted!';
+
+                    console.log('### Checking out...');
+                    document.getElementById('loading').innerHTML = 'Checking out...';
+                    const checkoutResponse = await window.VSDK.checkout({
+                        "encryptedCard": encryptedCard,
+                        "dpaTransactionOptions": {
+                            "transactionAmount": {
+                                "transactionAmount": "100.00",
+                                "transactionCurrencyCode": "BRL"
+                            },
+                            "dpaBillingPreference": "POSTAL_COUNTRY",
+                            "dpaAcceptedBillingCountries": [
+                                "BR"
+                            ],
+                            "merchantCountryCode": "BR",
+                            "dpaLocale": "en_US",
+                            "paymentOptions": [
+                                {
+                                    "dpaDynamicDataTtlMinutes": 2,
+                                    "dynamicDataType": "CARD_APPLICATION_CRYPTOGRAM_LONG_FORM"
+                                }
+                            ]
+                        },
+                        "consumer": {
+                            "identityProvider": "SRC",
+                            "consumerIdentity": {
+                                "identityType": "EMAIL_ADDRESS",
+                                "identityValue": "alice.doe@mercadolivre.com"
+                            },
+                            "firstName": "Alice",
+                            "lastName": "Doe",
+                            "fullName": "Alice Doe",
+                            "emailAddress": "alice.doe@mercadolivre.com",
+                            "mobileNumber": {
+                                "countryCode": "55",
+                                "phoneNumber": "19999999999"
+                            },
+                            "countryCode": "BR"
+                        },
+                        "complianceSettings": {
+                            "complianceResources": [
+                                {
+                                    "complianceType": "TERMS_AND_CONDITIONS",
+                                    "uri": "https://www.mercadopago.com.br/developers/en/docs/security/pci#bookmark_compliance"
+                                }
+                            ]
+                        },
+                        "payloadTypeIndicatorCheckout": "FULL"
+                    });
+                    console.log('### Checkout response', checkoutResponse);
+                    document.getElementById('loading').innerHTML = 'Checkout done!';
+                    document.getElementById('result').innerHTML = JSON.stringify(checkoutResponse);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }, 1500);
+        });
+    </script>
+</body>
+
+</html>

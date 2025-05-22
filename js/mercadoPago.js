@@ -1,8 +1,6 @@
 window.MPAuthenticator = (function () {
-    const publicKey = "APP_USR-3221c3fc-b9b2-4e68-a278-63bb4c46f578";
-    const mp = new MercadoPago(publicKey, {
-        locale: "pt-BR",
-    });
+    const publicKey = "APP_USR-1d1ce135-5976-4838-938e-64d5ec7198d4";
+    const mp = new MercadoPago(publicKey);
 
     let authenticatorInstance = null;
 
@@ -12,12 +10,10 @@ window.MPAuthenticator = (function () {
             authenticatorInstance = await mp.authenticator(amount, payerEmail);
             return authenticatorInstance;
         } catch (error) {
-            console.error({ message: error.message, errorCode: error?.errorCode })
+            console.error(error.message, "Error code:", error?.errorCode);
+            throw error;
         }
     }
-
-
-
 
     async function getAuthorizationToken() {
         try {
@@ -25,7 +21,7 @@ window.MPAuthenticator = (function () {
             const authorizationToken = await authenticatorInstance.show();
             return authorizationToken;
         } catch (error) {
-            console.log({ message: error.message, errorCode: error?.errorCode });
+            console.error(error.message, "Error code:", error?.errorCode);
             throw error;
         }
     }
@@ -36,18 +32,18 @@ window.MPAuthenticator = (function () {
             const userPaymentMethods = await mp.getAccountPaymentMethods(authorizationToken);
             return userPaymentMethods;
         } catch (error) {
-            console.log({ message: error.message, errorCode: error?.errorCode, details: error?.details });
+            console.error(error.message, "Error code:", error?.errorCode, "Details:", error?.details);
             throw error;
         }
     }
 
-    async function getCardId(authorizationToken, selectedCardPaymentMethodToken) {
+    async function getCardId(authorizationToken, selectedPaymentMethodToken) {
         try {
             // Gets the identification number from the selected payment method
-            const { card_id } = await mp.getCardId(authorizationToken, selectedCardPaymentMethodToken);
+            const { card_id } = await mp.getCardId(authorizationToken, selectedPaymentMethodToken);
             return card_id;
         } catch (error) {
-            console.log({ message: error.message, errorCode: error?.errorCode, details: error?.details });
+            console.error(error.message, "Error code:", error?.errorCode, "Details:", error?.details);
             throw error;
         }
     }
@@ -58,7 +54,7 @@ window.MPAuthenticator = (function () {
             placeholder: cardData.security_code_settings.placeholder || "CVV",
         });
 
-        field.mount(`#${cvvContainerId}`);
+        field.mount(cvvContainerId);
         field.update({ settings: cardData.security_code_settings });
         return field;
     }
@@ -70,16 +66,15 @@ window.MPAuthenticator = (function () {
             return cardToken;
         } catch (error) {
             console.error("Error while generating card token:", error);
-            // Consider re-throwing or returning a specific error object/value
+            throw error;
         }
     }
 
-    async function updateSelectedCardToken(authorizationToken, selectedCardPaymentMethodToken, cardToken) {
+    async function updatePaymentMethodToken(authorizationToken, selectedPaymentMethodToken, cardToken) {
         try {
             // Updates the card token (pseudotoken) for the selected payment method
-            await mp.updatePseudotoken(authorizationToken, selectedCardPaymentMethodToken, cardToken);
+            await mp.updatePseudotoken(authorizationToken, selectedPaymentMethodToken, cardToken);
         } catch (error) {
-            console.log({ message: error.message, errorCode: error?.errorCode, details: error?.details });
             throw error;
         }
     }
@@ -92,6 +87,6 @@ window.MPAuthenticator = (function () {
         createSecureField,
         getCardId,
         getCardToken,
-        updateSelectedCardToken
+        updatePaymentMethodToken
     };
 })();

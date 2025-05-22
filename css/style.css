@@ -1,12 +1,14 @@
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
-    Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  font-family: "Proxima Nova", -apple-system, Roboto, Arial, sans-serif,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-color: #f0f0f0;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
-  margin: 0;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -37,14 +39,17 @@ footer {
 
 .payment-section {
   margin-bottom: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #e7e7e7;
+  border-radius: 6px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-  padding-bottom: 4px;
+  padding: 1rem;
+  border-bottom: 1px solid #e7e7e7;
 }
 
 .section-header h2 {
@@ -60,22 +65,28 @@ footer {
   margin: 0;
 }
 
-#account-payment-methods-list > .payment-option:first-child,
-#other-payment-options-list > .payment-option:first-child {
-  border-top: 1px solid #eeeeee;
+#account-payment-methods-list,
+#other-payment-options-list {
+  padding: 0 1rem;
 }
 
-.payment-section > .payment-option:first-child {
+#card-details-input-area {
+  border: none;
+  margin: none;
+}
+
+payment-subtitle > .payment-option:first-child {
   border-top: none;
 }
 
 .payment-option {
   display: flex;
   align-items: center;
-  padding: 14px 0;
   border-bottom: 1px solid #eeeeee;
   cursor: pointer;
   position: relative;
+  margin: 0 -1rem;
+  padding: 1rem;
 }
 
 .payment-option:last-child {
@@ -121,14 +132,15 @@ footer {
 }
 
 .payment-icon {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   margin-right: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   overflow: hidden;
+  border: 1px solid #e7e7e7;
 }
 
 .payment-icon.account-money-icon-bg {
@@ -181,13 +193,21 @@ footer {
 }
 
 .payment-subtitle {
+  margin-top: 4px;
   font-size: 12px;
   color: #00a650;
-  font-weight: 400;
+  font-weight: 600;
+  background-color: #effff7;
+  padding: 5px;
+  border-radius: 8px;
+  width: fit-content;
 }
 
 .payment-subtitle.info {
   color: #666666;
+  background-color: inherit;
+  padding: inherit;
+  font-weight: 400;
 }
 
 #payButton {
@@ -209,7 +229,6 @@ footer {
 
 #card-details-input-area {
   padding: 16px 0px;
-  border-top: 1px solid #eaeaea;
 }
 
 .card-input-group {
@@ -222,10 +241,10 @@ footer {
 
 .card-input-group label {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
   color: #333;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  margin-top: 4px;
 }
 
 .card-input-group input[type="text"],
@@ -273,4 +292,42 @@ footer {
   background-repeat: no-repeat;
   background-position: right 10px center;
   padding-right: 30px;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-left-color: #009ee3; /* Mercado Pago blue */
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 0;
+}
+
+.secure-fields {
+  height: 30px;
+  width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  padding-left: 8px;
 }
