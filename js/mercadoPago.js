@@ -1,5 +1,5 @@
 window.MPAuthenticator = (function () {
-    const publicKey = "TEST-4b906b06-ff90-45b4-b2c0-00729e63a528";
+    const publicKey = "APP_USR-cb089f87-b11a-4395-91ff-b283ad34ad18";
     const mp = new MercadoPago(publicKey);
 
     let authenticatorInstance = null;
