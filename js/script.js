@@ -407,7 +407,7 @@ async function setupInitialView() {
     initialLoadDone = false;
 
 
-    console.log('Testing with APP_USR credentials for PROD user ended with b283ad34ad18 new');
+    console.log('Testing with APP_USR credentials for TEST user ended with 3d17c7aa627f ');
     const otherOptionsContainer = document.getElementById('other-payment-options-list');
     if (otherOptionsContainer) {
         otherOptionsContainer.innerHTML = '<div class="loading-container"><div class="spinner"></div></div>';
