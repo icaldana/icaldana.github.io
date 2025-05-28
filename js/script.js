@@ -1,4 +1,4 @@
-const payerEmail = "test_user_1731711336@testuser.com";
+const payerEmail = "test_user_286507954@testuser.com";
 const totalAmount = "20.00";
 
 let selectedPaymentMethod;
@@ -407,7 +407,7 @@ async function setupInitialView() {
     initialLoadDone = false;
 
 
-    console.log('Testing with APP_USR credentials for PROD user ended with b283ad34ad18');
+    console.log('Testing with APP_USR credentials for PROD user ended with b283ad34ad18 new');
     const otherOptionsContainer = document.getElementById('other-payment-options-list');
     if (otherOptionsContainer) {
         otherOptionsContainer.innerHTML = '<div class="loading-container"><div class="spinner"></div></div>';
