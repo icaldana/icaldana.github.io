@@ -3,7 +3,7 @@ const totalAmount = "20.00";
 
 let selectedPaymentMethod;
 let selectedInstallment = null;
-let authorizationToken = null;
+let fastPaymentToken = null;
 let securityCodeField = null;
 let initialLoadDone = false;
 
@@ -19,7 +19,7 @@ async function payWithMercadoPago() {
 
         if (isCVVMandatory) {
             try {
-                const cardId = await MPAuthenticator.getCardId(authorizationToken, cardData.token);
+                const cardId = await MPAuthenticator.getCardId(fastPaymentToken, cardData.token);
                 const cardTokenResponse = await MPAuthenticator.getCardToken(cardId);
 
                 if (!cardTokenResponse) {
@@ -27,7 +27,7 @@ async function payWithMercadoPago() {
                     return;
                 }
 
-                await MPAuthenticator.updatePaymentMethodToken(authorizationToken, cardData.token, cardTokenResponse);
+                await MPAuthenticator.updatePaymentMethodToken(fastPaymentToken, cardData.token, cardTokenResponse);
             } catch (error) {
                 console.error("Error during Mercado Pago card processing via MPAuthenticator:", error);
                 return;
@@ -384,13 +384,13 @@ async function initializePaymentFlow() {
             accountPaymentMethodsContainer.innerHTML = '<div class="loading-container"><div class="spinner"></div></div>';
         }
 
-        authorizationToken = await MPAuthenticator.getAuthorizationToken();
-        const accountPaymentMethodsResponse = await MPAuthenticator.getAccountPaymentMethods(authorizationToken);
+        fastPaymentToken = await MPAuthenticator.getFastPaymentToken();
+        const accountPaymentMethodsResponse = await MPAuthenticator.getAccountPaymentMethods(fastPaymentToken);
 
         if (accountPaymentMethodsResponse) {
             renderPaymentMethods(accountPaymentMethodsResponse);
         } else {
-            console.error("Failed to fetch payment methods or authorization token from MPAuthenticator.");
+            console.error("Failed to fetch payment methods or fast payment token from MPAuthenticator.");
             showErrorMessage(accountPaymentMethodsContainer, 'Error loading payment data. Please try reloading.');
         }
     } catch (error) {
@@ -406,8 +406,6 @@ async function initializePaymentFlow() {
 async function setupInitialView() {
     initialLoadDone = false;
 
-
-    console.log('Testing with APP_USR credentials for TEST user ended with 3d17c7aa627f ');
     const otherOptionsContainer = document.getElementById('other-payment-options-list');
     if (otherOptionsContainer) {
         otherOptionsContainer.innerHTML = '<div class="loading-container"><div class="spinner"></div></div>';
@@ -415,9 +413,10 @@ async function setupInitialView() {
 
     try {
         await MPAuthenticator.initializeAuthenticator(totalAmount, payerEmail);
+        console.log("Mercado Pago Authenticator initialized");
         if (otherOptionsContainer) otherOptionsContainer.innerHTML = '';
     } catch (error) {
-        console.error("Script: Error during start call in setupInitialView:", error);
+        console.error("Error during start call in setupInitialView:", error);
         showErrorMessage(otherOptionsContainer, error.message);
         return;
     }
