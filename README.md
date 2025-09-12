@@ -1,75 +1,116 @@
-# Fast Payments with Mercado Pago
+# 🔐 POC FIDO Standalone - Netlify Functions
 
-This project demonstrates integration with Mercado Pago's Fast Payments, including the handling of saved payment methods and the collection of CVV.
+## 📋 Visão Geral
 
-![Checkout Demo](./assets/checkout.png)
+POC de integração FIDO Standalone com WebAuthn real hospedada no **Netlify com Functions serverless** para resolver definitivamente o problema de CORS e testar autenticação biométrica em dispositivos móveis reais.
 
-## Project Structure
+### ✨ **Características desta versão:**
+
+- 🌐 **Netlify Functions** para proxy das APIs do Mercado Pago
+- 🛡️ **CORS resolvido** definitivamente via serverless
+- 📱 **Otimizado para mobile** com interface responsiva
+- 🔐 **WebAuthn real** - sem simulação de biometria
+- ⚡ **Deploy em 1 clique** - configuração automática
+- 🚀 **Edge deployment** - performance global
+
+---
+
+## 🚀 Deploy Rápido (5 minutos)
+
+1. **Criar conta no Netlify** (gratuito): https://netlify.com
+2. **Conectar repositório**:
+   - New site from Git → GitHub
+   - Selecionar repositório
+   - Pasta: `/netlify-poc`
+3. **Deploy automático**: Netlify detecta `netlify.toml` e configura tudo
+
+---
+
+## 🌐 URLs de Acesso
+
+Após o deploy, você terá:
 
 ```
-.├── index.html              # Main HTML document, user interface
-├── css/
-│   └── style.css           # Styles for the application
-├── js/
-│   ├── mercadoPago.js      # Mercado Pago SDK interaction logic (encapsulated in window.MPAuthenticator)
-│   └── checkoutFlow.js      # DOM manipulation, UI logic, calls to MPAuthenticator
-└── README.md               # This documentation
+🌍 Site Principal: https://[random-name].netlify.app/
+📡 Functions:
+  - /.netlify/functions/auth-create
+  - /.netlify/functions/auth-validate/:id/validation
+  - /.netlify/functions/auth-close/:id/close
 ```
 
-## Configuration
+### **Endpoints Utilizados via Netlify Functions:**
 
-Before running the application, you need to configure the following placeholders with your actual values:
+- `POST /.netlify/functions/auth-create` → Criar transação
+- `POST /.netlify/functions/auth-validate/{id}/validation` → Validar WebAuthn
+- `POST /.netlify/functions/auth-close/{id}/close` → Obter security token
 
-### 1. Mercado Pago Public Key
+---
 
-In `js/mercadoPago.js`, replace the placeholder with your actual Mercado Pago public key:
+## 🔧 Estrutura dos Arquivos
 
-```javascript
-const publicKey = "<YOUR_PUBLIC_KEY>"; // Replace with your actual public key
+```
+netlify-poc/
+├── netlify/
+│   └── functions/
+│       ├── auth-create.js          # Proxy para criar transação
+│       ├── auth-validate.js        # Proxy para validar WebAuthn
+│       └── auth-close.js           # Proxy para obter token
+├── scripts/
+│   └── fido-standalone.js          # JavaScript adaptado para Netlify
+├── styles/
+│   ├── main.css                    # Estilos base + banner Netlify
+│   └── fido.css                    # Estilos FIDO responsivos
+├── index.html                      # Interface principal
+├── fido-iframe.html                # Handler WebAuthn isolado
+├── netlify.toml                    # Configuração Netlify
+├── README.md                       # Esta documentação
+└── DEPLOY.md                       # Instruções de deploy
 ```
 
-### 2. Payer Information
+## 🔄 Desenvolvimento Local
 
-In `js/checkoutFlow.js`, replace the placeholders with the actual payer information:
+### **Pré-requisitos:**
 
-```javascript
-const payerEmail = "<PAYER_EMAIL>"; // Replace with the payer's email address
-const totalAmount = "<TOTAL_AMOUNT>"; // Replace with the payment amount (e.g., "100.00")
+```bash
+npm install -g netlify-cli
 ```
 
-**Important**:
+### **Executar localmente:**
 
-- The public key should be your Mercado Pago public key (starts with `APP_USR-` for production or `TEST-` for testing)
-- The payer email should be a valid email address
-- The total amount should be a string representing the payment amount in your currency
+```bash
+cd netlify-poc/
+netlify dev
+```
 
-## JavaScript Implementation Details
+### **URLs locais:**
 
-The Mercado Pago interaction logic is centralized in the `js/mercadoPago.js` file. This file defines a global object `window.MPAuthenticator` that encapsulates all calls to the Mercado Pago SDK and related flow logic. The main responsibilities of `MPAuthenticator` include:
+- Site: http://localhost:8888
+- Functions: http://localhost:8888/.netlify/functions/auth-create
 
-- **`MPAuthenticator.initializeAuthenticator(amount, payerEmail)`**: Called on page load (by `checkoutFlow.js`) to initialize the `mp.authenticator(amount, payerEmail)` and stores the `authenticatorInstance`.
-- **`MPAuthenticator.getFastPaymentToken()`**: Uses the stored `authenticatorInstance` to call `authenticatorInstance.show()` and returns the `fastPaymentToken`.
-- **`MPAuthenticator.getAccountPaymentMethods(fastPaymentToken)`**: Fetches the payment methods available to the user.
-- **`MPAuthenticator.getCardId(fastPaymentToken, selectedPaymentMethodToken)`**: Gets the ID of a saved card.
-- **`MPAuthenticator.createSecureField(cardData, cvvContainerId)`**: Creates and mounts the Mercado Pago Secure Field for CVV collection.
-- **`MPAuthenticator.getCardToken(cardId)`**: Generates a card token (`cardToken`) from the card ID and the CVV entered in the Secure Field.
-- **`MPAuthenticator.updatePaymentMethodToken(fastPaymentToken, selectedPaymentMethodToken, cardToken)`**: Updates the saved card's token (pseudotoken) with the newly generated `cardToken`.
-- Exposes the main SDK instance: `MPAuthenticator.mp`.
+---
 
-The `js/checkoutFlow.js` file is responsible for:
+## 📊 Logs e Monitoramento
 
-- Initializing the authenticator on page load by calling `MPAuthenticator.initializeAuthenticator`.
-- Orchestrating the display of payment methods: initially showing a trigger, then upon click, calling `MPAuthenticator.getFastPaymentToken` followed by `MPAuthenticator.getAccountPaymentMethods`.
-- Manipulating the DOM to render the initial trigger, payment methods, input fields (like the CVV container and installment selector).
-- Managing the user interface state (e.g., which payment method is selected, handling loading states).
-- Handling user feedback (alerts, error messages).
+### **Via Dashboard Netlify:**
 
-## How to Run
+1. Acessar https://app.netlify.com
+2. Selecionar seu site
+3. Functions → View logs em tempo real
 
-1.  Clone this repository (if applicable).
-2.  Navigate to the project directory.
-3.  Open the `index.html` file directly in a modern web browser.
+### **Logs das Functions:**
 
-    **Note**: Due to how the Mercado Pago SDK and payment interactions work, some functionalities (especially those depending on a valid `fastPaymentToken` and real-time interactions) may behave in a limited or simulated manner without a real backend and an HTTP/HTTPS server context. However, the frontend structure and SDK calls are configured according to best practices for secure CVV collection.
+- **auth-create**: Criação de transações
+- **auth-validate**: Validação WebAuthn
+- **auth-close**: Obtenção de security tokens
 
-This README aims to provide a clear guide to the structure and flow of the Mercado Pago integration in this example project.
+### **Debugging:**
+
+- Console do navegador para frontend
+- Netlify Functions logs para backend
+- Network tab para requisições HTTP
+
+---
+
+**Última atualização:** ${new Date().toLocaleDateString('pt-BR')}  
+**Versão:** 1.0.0 - Netlify Functions  
+**Ambiente:** Sandbox + HTTPS + Serverless
