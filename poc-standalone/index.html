@@ -15,65 +15,65 @@
 <body>
     <header>
         <h1>🚀 POC WebAuthn Standalone</h1>
-        <p class="subtitle">Autenticação + Token via auth-passkey-frontend</p>
+        <p class="subtitle">Authentication + Token via auth-passkey-frontend</p>
     </header>
 
     <div class="container">
         <div class="demo-container">
             <div class="description">
-                POC simplificada focada exclusivamente no processo de autenticação WebAuthn e obtenção do token.
-                Fluxo: Input TX ID → auth-passkey-frontend → Factors → WebAuthn → transactionCode
+                Simplified POC focused exclusively on the WebAuthn authentication process and token generation.
+                Flow: Input TX ID → auth-passkey-frontend → Factors → WebAuthn → transactionCode
             </div>
 
             <div class="demo-section">
-                <h3>🔐 Fluxo de Autenticação</h3>
+                <h3>🔐 Authentication Flow</h3>
                 <div class="auth-container">
                     <button id="authenticate-btn" class="auth-button">
-                        🚀 Iniciar Autenticação FIDO
+                        🚀 Start FIDO Authentication
                     </button>
                     <div id="auth-status" class="auth-status"></div>
                 </div>
             </div>
 
             <div class="demo-section">
-                <h3>📝 Configuração</h3>
+                <h3>📝 Configuration</h3>
                 <div class="config-container">
                     <div class="config-row">
                         <label>
                             <input type="text" id="user-id" placeholder="123456789" value="123456789" />
-                            User ID (obrigatório para teste)
+                            User ID (required for testing)
                         </label>
                     </div>
                     <div class="config-row">
                         <label>
-                            <input type="text" id="transaction-id" placeholder="Digite o Transaction ID" />
-                            Transaction ID (insira manualmente)
+                            <input type="text" id="transaction-id" placeholder="Enter Transaction ID" />
+                            Transaction ID (enter manually)
                         </label>
                     </div>
                 </div>
             </div>
 
             <div class="demo-section">
-                <h3>📋 Logs de Comunicação</h3>
+                <h3>📋 Communication Logs</h3>
                 <div id="communication-logs" class="logs-container">
                     <div class="log-entry info">
-                        <span class="timestamp">Aguardando interação...</span>
+                        <span class="timestamp">Waiting for interaction...</span>
                     </div>
                 </div>
-                <button id="clear-logs" class="clear-button">🧹 Limpar Logs</button>
+                <button id="clear-logs" class="clear-button">🧹 Clear Logs</button>
             </div>
 
             <div class="demo-section">
-                <h3>✅ Resultado da Autenticação</h3>
+                <h3>✅ Authentication Result</h3>
                 <div id="auth-result" class="result-container">
                     <div class="result-placeholder">
-                        Nenhuma autenticação realizada ainda.
+                        No authentication performed yet.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Iframe oculto para o fluxo FIDO -->
+        <!-- Hidden iframe for FIDO flow -->
         <iframe id="passkey-iframe" src="./iframe.html" style="display: none;" sandbox="allow-scripts allow-same-origin"
             title="FIDO Authentication Iframe">
         </iframe>

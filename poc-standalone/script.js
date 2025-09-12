@@ -29,16 +29,16 @@ class PasskeyStandaloneIntegration {
         this.resultElement = document.getElementById('auth-result');
         this.currentSecurityToken = null;
         this.setupEventListeners();
-        this.logger.log('🚀 POC WebAuthn inicializada', 'info');
+        this.logger.log('🚀 WebAuthn POC initialized', 'info');
     }
 
     setupEventListeners() {
-        // Botão de autenticação
+        // Authentication button
         document.getElementById('authenticate-btn').addEventListener('click', () => {
             this.handleAuthenticationClick();
         });
 
-        // Botão de limpar logs
+        // Clear logs button
         document.getElementById('clear-logs').addEventListener('click', () => {
             this.logger.clear();
         });
@@ -49,7 +49,7 @@ class PasskeyStandaloneIntegration {
         const transactionId = document.getElementById('transaction-id').value;
 
         if (!userId || !transactionId) {
-            throw new Error('User ID e Transaction ID são obrigatórios');
+            throw new Error('User ID and Transaction ID are required');
         }
 
         return { userId, transactionId };
@@ -59,7 +59,7 @@ class PasskeyStandaloneIntegration {
         const tokenDisplay = document.createElement('div');
         tokenDisplay.className = 'security-token-display';
         tokenDisplay.innerHTML = `
-            <div class="security-token-label">🎫 Security Token Obtido:</div>
+            <div class="security-token-label">🎫 Security Token Obtained:</div>
             <div class="security-token-value">${securityToken}</div>
         `;
 
@@ -69,19 +69,19 @@ class PasskeyStandaloneIntegration {
     async handleAuthenticationClick() {
         const button = document.getElementById('authenticate-btn');
 
-        // Configurar UI para estado de loading
+        // Configure UI for loading state
         button.disabled = true;
         button.classList.add('loading');
-        button.textContent = '⏳ Processando...';
-        this.updateStatus('Validando dados de entrada...', 'loading');
+        button.textContent = '⏳ Processing...';
+        this.updateStatus('Validating input data...', 'loading');
 
         try {
-            // Validar inputs obrigatórios
+            // Validate required inputs
             const { userId, transactionId } = this.validateInputs();
-            this.logger.log(`✅ Iniciando WebAuthn - User: ${userId}, TX: ${transactionId}`, 'info');
+            this.logger.log(`✅ Starting WebAuthn - User: ${userId}, TX: ${transactionId}`, 'info');
 
-            // Iniciar autenticação WebAuthn
-            this.updateStatus('Aguardando autenticação WebAuthn...', 'loading');
+            // Start WebAuthn authentication
+            this.updateStatus('Waiting for WebAuthn authentication...', 'loading');
 
             const result = await this.authenticateWithPasskey(userId, transactionId);
 
@@ -91,19 +91,19 @@ class PasskeyStandaloneIntegration {
                 this.handleAuthError(result.error);
             }
         } catch (error) {
-            this.logger.log(`❌ Erro no processo: ${error.message}`, 'error');
+            this.logger.log(`❌ Process error: ${error.message}`, 'error');
             this.handleAuthError({ message: error.message, retriable: true });
         } finally {
-            // Restaurar UI
+            // Restore UI
             button.disabled = false;
             button.classList.remove('loading');
-            button.textContent = '🚀 Iniciar Autenticação FIDO';
+            button.textContent = '🚀 Start FIDO Authentication';
         }
     }
 
     async authenticateWithPasskey(userId = null, transactionId = null) {
         return new Promise((resolve, reject) => {
-            // Criar MessageChannel para comunicação segura
+            // Create MessageChannel for secure communication
             this.messageChannel = new MessageChannel();
             const port1 = this.messageChannel.port1;
             const port2 = this.messageChannel.port2;
@@ -114,21 +114,21 @@ class PasskeyStandaloneIntegration {
 
                 switch (message) {
                     case 'authenticate':
-                        // Sucesso! Recebeu o security token dos Factors
-                        this.logger.log(`✅ Token obtido: ${data.securityToken.substring(0, 30)}...`, 'success');
+                        // Success! Received security token from Factors
+                        this.logger.log(`✅ Token obtained: ${data.securityToken.substring(0, 30)}...`, 'success');
                         resolve({
                             success: true,
                             token: data.token,
-                            transactionCode: data.token, // O credential.id
-                            securityToken: data.securityToken, // Security token obtido pelos Factors
+                            transactionCode: data.token, // The credential.id
+                            securityToken: data.securityToken, // Security token obtained from Factors
                             sessionId: data.sessionId || `session_${Date.now()}`,
                             timestamp: new Date().toISOString()
                         });
                         break;
 
                     case 'error':
-                        // Erro na autenticação
-                        this.logger.log(`❌ Erro: ${data.error.message}`, 'error');
+                        // Authentication error
+                        this.logger.log(`❌ Error: ${data.error.message}`, 'error');
                         resolve({
                             success: false,
                             error: data.error,
@@ -136,7 +136,7 @@ class PasskeyStandaloneIntegration {
                         break;
 
                     case 'ready':
-                        // Iframe carregado e pronto
+                        // Iframe loaded and ready
                         break;
 
                     default:
@@ -146,21 +146,21 @@ class PasskeyStandaloneIntegration {
                 port1.close();
             };
 
-            // Obter referência do iframe
+            // Get iframe reference
             this.iframe = document.getElementById('passkey-iframe');
 
-            // Configurar timeout de 60 segundos
+            // Configure 60-second timeout
             const timeoutId = setTimeout(() => {
                 if (port1.onmessage) {
                     port1.close();
-                    this.logger.log('⏰ Timeout na autenticação (60s)', 'error');
-                    reject(new Error('Timeout na autenticação após 60 segundos'));
+                    this.logger.log('⏰ Authentication timeout (60s)', 'error');
+                    reject(new Error('Authentication timeout after 60 seconds'));
                 }
             }, 60000);
 
-            // Aguardar o iframe carregar
+            // Wait for iframe to load
             const handleIframeLoad = () => {
-                // Enviar mensagem para iniciar o fluxo
+                // Send message to start the flow
                 const messageData = {
                     message: 'authenticate',
                     data: {
@@ -172,11 +172,11 @@ class PasskeyStandaloneIntegration {
 
                 this.iframe.contentWindow.postMessage(messageData, '*', [port2]);
 
-                // Limpar timeout se tudo correu bem
+                // Clear timeout if everything went well
                 clearTimeout(timeoutId);
             };
 
-            // Verificar se o iframe já está carregado
+            // Check if iframe is already loaded
             if (this.iframe.contentDocument && this.iframe.contentDocument.readyState === 'complete') {
                 handleIframeLoad();
             } else {
@@ -186,12 +186,12 @@ class PasskeyStandaloneIntegration {
     }
 
     handleSuccessfulAuth(result) {
-        this.updateStatus('✅ Autenticação realizada com sucesso!', 'success');
+        this.updateStatus('✅ Authentication completed successfully!', 'success');
 
         const securityToken = result.securityToken || result.token;
         this.currentSecurityToken = securityToken;
 
-        // Exibir resultado final
+        // Display final result
         this.displayResult({
             success: true,
             securityToken: securityToken,
@@ -199,23 +199,23 @@ class PasskeyStandaloneIntegration {
             timestamp: result.timestamp
         });
 
-        // Exibir security token em destaque
+        // Highlight security token display
         this.displaySecurityToken(securityToken);
 
-        this.logger.log(`✅ Autenticação concluída! Token: ${securityToken.substring(0, 30)}...`, 'success');
+        this.logger.log(`✅ Authentication completed! Token: ${securityToken.substring(0, 30)}...`, 'success');
     }
 
     handleAuthError(error) {
-        this.logger.log(`❌ Falha na autenticação: ${error.message}`, 'error');
+        this.logger.log(`❌ Authentication failure: ${error.message}`, 'error');
 
-        let statusMessage = '❌ Falha na autenticação';
+        let statusMessage = '❌ Authentication failure';
         if (error.retriable) {
-            statusMessage += ' (pode tentar novamente)';
+            statusMessage += ' (can try again)';
         }
 
         this.updateStatus(statusMessage, 'error');
 
-        // Exibir erro detalhado
+        // Display detailed error
         this.displayResult({
             success: false,
             error: {

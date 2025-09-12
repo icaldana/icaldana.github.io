@@ -78,22 +78,22 @@
 
 <body>
     <div class="iframe-container">
-        <h2>🔐 WebAuthn Simplificado</h2>
-        <p>Autenticação + Token</p>
+        <h2>🔐 WebAuthn Simplified</h2>
+        <p>Authentication + Token</p>
 
         <div id="status" class="status info">
-            Aguardando solicitação de autenticação...
+            Waiting for authentication request...
         </div>
 
         <div id="logs" class="logs">
             <div class="log-entry">
-                <span class="timestamp">[IFRAME]</span> Iframe carregado e pronto
+                <span class="timestamp">[IFRAME]</span> Iframe loaded and ready
             </div>
         </div>
     </div>
 
     <script>
-        // Configuração do serviço auth-passkey-frontend
+        // auth-passkey-frontend service configuration
         const AUTH_PASSKEY_CONFIG = {
             baseUrl: 'https://auth-passkey-frontend.sandbox.melioffice.com',
             timeout: 60000
@@ -106,7 +106,7 @@
                 this.status = document.getElementById('status');
 
                 this.setupMessageListener();
-                this.log('🚀 Iframe WebAuthn pronto');
+                this.log('🚀 WebAuthn iframe ready');
             }
 
             setupMessageListener() {
@@ -114,7 +114,7 @@
                     const { message, data } = event.data;
 
                     if (message === 'authenticate') {
-                        this.log('🚀 Iniciando autenticação');
+                        this.log('🚀 Starting authentication');
                         this.handleAuthenticationRequest(data, event.ports[0]);
                     }
                 });
@@ -125,35 +125,35 @@
                 this.transactionId = data.transactionId;
                 this.log(`✅ TX ID: ${data.transactionId}`);
 
-                this.updateStatus('Preparando autenticação...', 'info');
+                this.updateStatus('Preparing authentication...', 'info');
 
-                // Notificar que estamos prontos
+                // Notify that we are ready
                 this.sendMessage('ready', { timestamp: Date.now() });
 
-                // Executar WebAuthn
+                // Execute WebAuthn
                 setTimeout(() => {
                     this.executeWebAuthn();
                 }, 1000);
             }
 
             async executeWebAuthn() {
-                this.updateStatus('Aguardando autenticação biométrica...', 'info');
+                this.updateStatus('Waiting for biometric authentication...', 'info');
 
                 try {
-                    // Verificar suporte WebAuthn
+                    // Check WebAuthn support
                     if (!this.isWebAuthnSupported()) {
-                        throw new Error('WebAuthn não é suportado neste dispositivo');
+                        throw new Error('WebAuthn is not supported on this device');
                     }
 
-                    // Executar WebAuthn real
+                    // Execute real WebAuthn
                     const credential = await this.tryRealWebAuthn();
-                    this.log(`✅ Credencial obtida: ${credential.id}`);
+                    this.log(`✅ Credential obtained: ${credential.id}`);
 
-                    // Sucesso! Usar credential.id como security token
+                    // Success! Use credential.id as security token
                     this.handleSuccess(credential, credential.id);
 
                 } catch (error) {
-                    this.log(`❌ Erro na autenticação: ${error.message}`);
+                    this.log(`❌ Authentication error: ${error.message}`);
                     this.handleError({
                         message: error.message,
                         retriable: false,
@@ -168,9 +168,9 @@
 
             async tryRealWebAuthn() {
                 try {
-                    // ✅ STEP 1: Obter challenge real do auth-passkey-frontend
-                    this.log('🔗 Obtendo challenge do auth-passkey-frontend...');
-                    this.updateStatus('Conectando com serviço de autenticação...', 'info');
+                    // ✅ STEP 1: Get real challenge from auth-passkey-frontend
+                    this.log('🔗 Getting challenge from auth-passkey-frontend...');
+                    this.updateStatus('Connecting to authentication service...', 'info');
 
                     const challengeResponse = await fetch(`${AUTH_PASSKEY_CONFIG.baseUrl}/passkey/validation/start?transaction_id=${this.transactionId}`, {
                         method: 'POST',
@@ -184,22 +184,22 @@
                     });
 
                     if (!challengeResponse.ok) {
-                        throw new Error(`Erro ao obter challenge: ${challengeResponse.status} ${challengeResponse.statusText}`);
+                        throw new Error(`Error getting challenge: ${challengeResponse.status} ${challengeResponse.statusText}`);
                     }
 
                     const challengeData = await challengeResponse.json();
-                    this.log('✅ Challenge obtido do backend');
+                    this.log('✅ Challenge obtained from backend');
 
                     const { publicKeyCredentialRequestOptions } = challengeData;
 
                     if (!publicKeyCredentialRequestOptions) {
-                        throw new Error('Challenge inválido retornado pelo servidor');
+                        throw new Error('Invalid challenge returned by server');
                     }
 
-                    this.updateStatus('👆 Toque no sensor biométrico ou use sua passkey', 'info');
-                    this.log('🔐 Executando WebAuthn com challenge real...');
+                    this.updateStatus('👆 Touch biometric sensor or use your passkey', 'info');
+                    this.log('🔐 Executing WebAuthn with real challenge...');
 
-                    // Converter challenge de base64 para Uint8Array se necessário
+                    // Convert challenge from base64 to Uint8Array if needed
                     if (typeof publicKeyCredentialRequestOptions.challenge === 'string') {
                         publicKeyCredentialRequestOptions.challenge = Uint8Array.from(
                             atob(publicKeyCredentialRequestOptions.challenge),
@@ -212,14 +212,14 @@
                     });
 
                     if (!credential) {
-                        throw new Error('Nenhuma credencial retornada');
+                        throw new Error('No credential returned');
                     }
 
-                    this.log('✅ Credencial WebAuthn obtida');
+                    this.log('✅ WebAuthn credential obtained');
 
-                    // ✅ STEP 3: Enviar credencial assinada para o backend
-                    this.updateStatus('Validando credencial no backend...', 'info');
-                    this.log('📤 Enviando credencial para validação...');
+                    // ✅ STEP 3: Send signed credential to backend
+                    this.updateStatus('Validating credential on backend...', 'info');
+                    this.log('📤 Sending credential for validation...');
 
                     const finishResponse = await fetch(`${AUTH_PASSKEY_CONFIG.baseUrl}/passkey/validation/finish?transaction_id=${this.transactionId}`, {
                         method: 'POST',
@@ -240,17 +240,17 @@
                     });
 
                     if (!finishResponse.ok) {
-                        throw new Error(`Erro na validação: ${finishResponse.status} ${finishResponse.statusText}`);
+                        throw new Error(`Validation error: ${finishResponse.status} ${finishResponse.statusText}`);
                     }
 
                     const finishData = await finishResponse.json();
-                    this.log('✅ Validação concluída pelo backend');
+                    this.log('✅ Validation completed by backend');
 
-                    // ✅ STEP 4: Retornar transactionCode obtido do Factors
+                    // ✅ STEP 4: Return transactionCode obtained from Factors
                     const { transactionCode } = finishData;
 
                     if (!transactionCode) {
-                        throw new Error('Transaction code não retornado pelo servidor');
+                        throw new Error('Transaction code not returned by server');
                     }
 
                     return {
@@ -260,23 +260,23 @@
                     };
 
                 } catch (error) {
-                    this.log(`❌ Erro no fluxo WebAuthn: ${error.message}`);
+                    this.log(`❌ WebAuthn flow error: ${error.message}`);
 
                     if (error.name === 'NotAllowedError') {
-                        throw new Error('Usuário cancelou ou não autorizou a operação');
+                        throw new Error('User cancelled or did not authorize the operation');
                     } else if (error.name === 'InvalidStateError') {
-                        throw new Error('Nenhuma passkey disponível neste dispositivo');
+                        throw new Error('No passkey available on this device');
                     } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                        throw new Error('Erro de conexão com serviço de autenticação');
+                        throw new Error('Connection error with authentication service');
                     } else {
-                        throw new Error(`Erro WebAuthn: ${error.message}`);
+                        throw new Error(`WebAuthn error: ${error.message}`);
                     }
                 }
             }
 
             handleSuccess(credential, securityToken = null) {
-                this.log('✅ Autenticação bem-sucedida');
-                this.updateStatus('✅ Autenticação realizada com sucesso!', 'success');
+                this.log('✅ Authentication successful');
+                this.updateStatus('✅ Authentication completed successfully!', 'success');
 
                 const responseData = {
                     token: credential.id,
@@ -292,8 +292,8 @@
             }
 
             handleError(error) {
-                this.log(`❌ Erro: ${error.message}`);
-                this.updateStatus(`❌ Erro: ${error.message}`, 'error');
+                this.log(`❌ Error: ${error.message}`);
+                this.updateStatus(`❌ Error: ${error.message}`, 'error');
                 this.sendMessage('error', { error });
             }
 
@@ -301,7 +301,7 @@
                 if (this.port) {
                     this.port.postMessage({ message, data });
                 } else {
-                    this.log('⚠️ Nenhuma porta disponível');
+                    this.log('⚠️ No port available');
                 }
             }
 
@@ -325,15 +325,15 @@
             }
         }
 
-        // Inicializar quando o DOM estiver pronto
+        // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🔐 FIDO Iframe carregado');
+            console.log('🔐 FIDO Iframe loaded');
             window.fidoHandler = new FidoIframeHandler();
         });
 
-        // Notificar parent que iframe está carregado
+        // Notify parent that iframe is loaded
         window.addEventListener('load', () => {
-            console.log('✅ Iframe totalmente carregado');
+            console.log('✅ Iframe fully loaded');
         });
     </script>
 </body>
