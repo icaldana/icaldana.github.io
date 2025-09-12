@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#009ee3">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>POC WebAuthn Standalone</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <header>
+        <h1>🚀 POC WebAuthn Standalone</h1>
+        <p class="subtitle">Autenticação + Token via auth-passkey-frontend</p>
+    </header>
+
+    <div class="container">
+        <div class="demo-container">
+            <div class="description">
+                POC simplificada focada exclusivamente no processo de autenticação WebAuthn e obtenção do token.
+                Fluxo: Input TX ID → auth-passkey-frontend → Factors → WebAuthn → transactionCode
+            </div>
+
+            <div class="demo-section">
+                <h3>🔐 Fluxo de Autenticação</h3>
+                <div class="auth-container">
+                    <button id="authenticate-btn" class="auth-button">
+                        🚀 Iniciar Autenticação FIDO
+                    </button>
+                    <div id="auth-status" class="auth-status"></div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3>📝 Configuração</h3>
+                <div class="config-container">
+                    <div class="config-row">
+                        <label>
+                            <input type="text" id="user-id" placeholder="123456789" value="123456789" />
+                            User ID (obrigatório para teste)
+                        </label>
+                    </div>
+                    <div class="config-row">
+                        <label>
+                            <input type="text" id="transaction-id" placeholder="Digite o Transaction ID" />
+                            Transaction ID (insira manualmente)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="demo-section">
+                <h3>📋 Logs de Comunicação</h3>
+                <div id="communication-logs" class="logs-container">
+                    <div class="log-entry info">
+                        <span class="timestamp">Aguardando interação...</span>
+                    </div>
+                </div>
+                <button id="clear-logs" class="clear-button">🧹 Limpar Logs</button>
+            </div>
+
+            <div class="demo-section">
+                <h3>✅ Resultado da Autenticação</h3>
+                <div id="auth-result" class="result-container">
+                    <div class="result-placeholder">
+                        Nenhuma autenticação realizada ainda.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Iframe oculto para o fluxo FIDO -->
+        <iframe id="passkey-iframe" src="./iframe.html" style="display: none;" sandbox="allow-scripts allow-same-origin"
+            title="FIDO Authentication Iframe">
+        </iframe>
+    </div>
+
+    <footer>
+        <p>🎯 POC Standalone - WebAuthn + auth-passkey-frontend + Factors</p>
+        <p>🚀 Deploy: GitHub Pages | Netlify | Vercel</p>
+    </footer>
+
+    <script src="./script.js"></script>
+</body>
+
+</html>

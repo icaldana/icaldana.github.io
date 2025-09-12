@@ -1,0 +1,35 @@
+{
+  "name": "poc-webauthn-standalone",
+  "version": "2.0.0",
+  "description": "POC WebAuthn Standalone - auth-passkey-frontend + Factors integration",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve . -p 8000 --host 0.0.0.0",
+    "dev": "python -m http.server 8000",
+    "deploy:netlify": "netlify deploy --prod --dir=.",
+    "deploy:vercel": "vercel --prod",
+    "deploy:surge": "surge . --domain poc-webauthn-standalone.surge.sh"
+  },
+  "keywords": [
+    "webauthn",
+    "passkey",
+    "factors",
+    "mercadopago",
+    "authentication",
+    "poc",
+    "standalone"
+  ],
+  "author": "MercadoPago Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/poc-webauthn-standalone.git"
+  },
+  "homepage": "https://username.github.io/poc-webauthn-standalone/",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
