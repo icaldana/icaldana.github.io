@@ -11,18 +11,6 @@
   # Diretório onde estão as functions
   directory = "netlify/functions"
 
-# Configurações de redirecionamento
-[[redirects]]
-  # Redirecionar paths com ID dinâmico para auth-validate
-  from = "/.netlify/functions/auth-validate/:id/validation"
-  to = "/.netlify/functions/auth-validate"
-  status = 200
-
-[[redirects]]
-  # Redirecionar paths com ID dinâmico para auth-close
-  from = "/.netlify/functions/auth-close/:id/close"
-  to = "/.netlify/functions/auth-close"
-  status = 200
 
 # Headers para CORS e segurança
 [[headers]]
