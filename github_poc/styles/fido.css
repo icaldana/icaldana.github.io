@@ -1,0 +1,811 @@
+.fido-demo-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  /* Prevent horizontal overflow */
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.description {
+  background: #f8f9fa;
+  border-left: 4px solid #009ee3;
+  padding: 15px;
+  margin-bottom: 30px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.demo-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.demo-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 18px;
+  border-bottom: 2px solid #009ee3;
+  padding-bottom: 8px;
+}
+
+/* Authentication Section */
+.auth-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.auth-button {
+  background: linear-gradient(135deg, #009ee3, #0078b3);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 16px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 158, 227, 0.3);
+  min-width: 250px;
+}
+
+.auth-button:hover {
+  background: linear-gradient(135deg, #0078b3, #005c8a);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 158, 227, 0.4);
+}
+
+.auth-button:active {
+  transform: translateY(0);
+}
+
+.auth-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-status {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: 500;
+  min-height: 20px;
+}
+
+.auth-status.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.auth-status.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  /* Enhanced error display */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.4;
+  max-width: 100%;
+}
+
+.auth-status.loading {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+/* Logs Section */
+.logs-container {
+  background: #1e1e1e;
+  color: #f8f8f2;
+  padding: 15px;
+  border-radius: 5px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  height: 300px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  /* Enhanced responsive fixes */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  word-wrap: break-word;
+}
+
+.log-entry {
+  margin-bottom: 8px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  border-left: 3px solid;
+  /* Enhanced text handling */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.3;
+  max-width: 100%;
+}
+
+.log-entry.info {
+  border-left-color: #3498db;
+  background: rgba(52, 152, 219, 0.1);
+}
+
+.log-entry.success {
+  border-left-color: #2ecc71;
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.log-entry.error {
+  border-left-color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.log-entry.warning {
+  border-left-color: #f39c12;
+  background: rgba(243, 156, 18, 0.1);
+}
+
+.timestamp {
+  color: #95a5a6;
+  font-size: 11px;
+}
+
+.clear-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.clear-button:hover {
+  background: #5a6268;
+}
+
+/* Result Section */
+.result-container {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  /* Responsive fixes */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: 100%;
+  max-width: 100%;
+}
+
+.result-placeholder {
+  color: #6c757d;
+  font-style: italic;
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+
+.result-data {
+  color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.result-data .key {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.result-data .value {
+  color: #2ecc71;
+}
+
+/* Configuration Section */
+.config-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.config-container label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.config-container input[type='checkbox'] {
+  transform: scale(1.2);
+}
+
+.config-container input[type='text'] {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 200px;
+}
+
+/* Mobile-First Responsive Design */
+@media (max-width: 768px) {
+  .fido-demo-container {
+    padding: 15px;
+    max-width: 100%;
+  }
+
+  .demo-section {
+    padding: 20px 15px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+  }
+
+  .demo-section h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .description {
+    padding: 20px;
+    font-size: 16px;
+    line-height: 1.8;
+    border-radius: 12px;
+  }
+
+  /* Authentication Section - Mobile Optimized */
+  .auth-container {
+    padding: 25px 10px;
+  }
+
+  .auth-button {
+    padding: 18px 30px;
+    font-size: 18px;
+    min-width: 280px;
+    width: 100%;
+    max-width: 350px;
+    border-radius: 30px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .auth-status {
+    margin-top: 20px;
+    padding: 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    /* Enhanced mobile error handling */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Enhanced error states for mobile */
+  .auth-status.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 2px solid #f5c6cb;
+    font-weight: 500;
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .auth-status.loading {
+    background: #fff3cd;
+    color: #856404;
+    border: 2px solid #ffeaa7;
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .auth-status.success {
+    background: #d4edda;
+    color: #155724;
+    border: 2px solid #c3e6cb;
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  /* Logs Section - Mobile Optimized */
+  .logs-container {
+    height: 250px;
+    font-size: 14px;
+    padding: 20px;
+    border-radius: 8px;
+    line-height: 1.4;
+  }
+
+  .log-entry {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    /* Enhanced mobile log handling */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    max-width: 100%;
+  }
+
+  /* Enhanced error logs for mobile */
+  .log-entry.error {
+    border-left-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.15);
+    border-left-width: 4px;
+    font-weight: 500;
+  }
+
+  .log-entry.warning {
+    border-left-color: #f39c12;
+    background: rgba(243, 156, 18, 0.15);
+    border-left-width: 4px;
+  }
+
+  .timestamp {
+    font-size: 12px;
+  }
+
+  .clear-button {
+    padding: 12px 20px;
+    font-size: 14px;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+
+  /* Configuration Section - Mobile Optimized */
+  .config-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .config-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .config-container label {
+    width: 100%;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .config-container input[type='text'] {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
+
+  .config-container input[type='text']:focus {
+    border-color: #009ee3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 158, 227, 0.1);
+  }
+
+  /* Results Section - Mobile Optimized */
+  .result-container {
+    padding: 20px;
+    border-radius: 8px;
+  }
+
+  .result-data {
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 20px;
+    border-radius: 8px;
+  }
+
+  .result-placeholder {
+    padding: 30px 20px;
+    font-size: 16px;
+    text-align: center;
+    border-radius: 8px;
+  }
+
+  /* Payment Methods - Mobile Optimized */
+  .payment-methods-container {
+    padding: 20px;
+    border-radius: 8px;
+  }
+
+  .payment-method-item {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    gap: 15px;
+  }
+
+  .payment-method-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .payment-method-name {
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
+
+  .payment-method-details {
+    font-size: 14px;
+  }
+
+  /* Security Token - Mobile Optimized */
+  .security-token-display {
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+
+  .security-token-label {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .security-token-value {
+    font-size: 14px;
+    padding: 15px;
+    border-radius: 8px;
+    line-height: 1.4;
+    /* Enhanced token display for mobile */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    white-space: pre-wrap;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+/* Extra Small Devices (phones in portrait) */
+@media (max-width: 480px) {
+  .fido-demo-container {
+    padding: 10px;
+  }
+
+  .demo-section {
+    padding: 15px 10px;
+    margin-bottom: 10px;
+  }
+
+  .demo-section h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .description {
+    padding: 15px;
+    font-size: 15px;
+  }
+
+  .auth-button {
+    padding: 16px 25px;
+    font-size: 16px;
+    min-width: 250px;
+  }
+
+  .auth-status {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .logs-container {
+    height: 200px;
+    font-size: 13px;
+    padding: 15px;
+  }
+
+  .config-container input[type='text'] {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .result-data {
+    font-size: 13px;
+    padding: 15px;
+  }
+
+  .security-token-value {
+    font-size: 13px;
+    padding: 12px;
+    /* Extra enhanced for small screens */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    white-space: pre-wrap;
+    max-width: 100%;
+    overflow-x: auto;
+    line-height: 1.3;
+  }
+
+  /* Enhanced error handling for extra small screens */
+  .auth-status {
+    padding: 15px !important;
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .log-entry {
+    padding: 10px !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .result-data {
+    font-size: 12px !important;
+    padding: 12px !important;
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+}
+
+/* Touch-friendly enhancements */
+@media (hover: none) and (pointer: coarse) {
+  .auth-button {
+    min-height: 48px;
+  }
+
+  .clear-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .config-container input[type='text'] {
+    min-height: 44px;
+  }
+
+  .payment-method-item {
+    min-height: 60px;
+  }
+}
+
+/* Animation for loading state */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.auth-button.loading {
+  animation: pulse 1.5s infinite;
+}
+
+/* Success animation */
+@keyframes successGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
+  }
+}
+
+.auth-status.success {
+  animation: successGlow 2s ease-in-out;
+}
+
+/* Payment configuration layout */
+.config-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.config-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.config-row input,
+.config-row select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.config-row input:focus,
+.config-row select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Payment methods container */
+.payment-methods-container {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 10px;
+  min-height: 120px;
+}
+
+.payment-method-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+
+.payment-method-item:hover {
+  border-color: #007bff;
+}
+
+.payment-method-icon {
+  width: 32px;
+  height: 32px;
+  background: #007bff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.payment-method-info {
+  flex: 1;
+}
+
+.payment-method-name {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.payment-method-details {
+  font-size: 12px;
+  color: #666;
+}
+
+.payment-method-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.payment-method-status.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.payment-method-status.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Security token display */
+.security-token-display {
+  background: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 6px;
+  padding: 15px;
+  margin: 15px 0;
+  /* Enhanced responsive fixes */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.security-token-label {
+  font-weight: 600;
+  color: #0066cc;
+  margin-bottom: 8px;
+  word-wrap: break-word;
+}
+
+.security-token-value {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  background: white;
+  padding: 8px;
+  border-radius: 4px;
+  word-break: break-all;
+  border: 1px solid #ccc;
+  /* Enhanced responsive fixes */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow-x: auto;
+  line-height: 1.4;
+}
+
+/* Global responsive fixes */
+.demo-section,
+.fido-demo-container,
+.auth-container,
+.logs-container,
+.result-container,
+.config-container,
+.payment-methods-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Ensure all text elements wrap properly */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+div,
+span {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+/* Github Pages specific styles */
+.github-deployment {
+  background: linear-gradient(135deg, #24292e, #58a6ff);
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid #58a6ff;
+}
+
+.github-deployment strong {
+  color: #58a6ff;
+}

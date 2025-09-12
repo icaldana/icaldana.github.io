@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIDO Authentication Iframe - Github Pages</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .iframe-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        .status.info {
+            background: rgba(52, 152, 219, 0.3);
+            border: 1px solid rgba(52, 152, 219, 0.5);
+        }
+
+        .status.success {
+            background: rgba(46, 204, 113, 0.3);
+            border: 1px solid rgba(46, 204, 113, 0.5);
+        }
+
+        .status.error {
+            background: rgba(231, 76, 60, 0.3);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+        }
+
+        .webauthn-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .webauthn-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .webauthn-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .logs {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .timestamp {
+            color: #bdc3c7;
+            font-size: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="iframe-container">
+        <h2>🔐 FIDO Authentication Service</h2>
+        <p>Github Pages Authentication Iframe</p>
+
+        <div id="status" class="status info">
+            Aguardando solicitação de autenticação...
+        </div>
+
+        <button id="manual-auth" class="webauthn-button" style="display: none;">
+            🔑 Simular WebAuthn
+        </button>
+
+        <div id="logs" class="logs">
+            <div class="log-entry">
+                <span class="timestamp">[IFRAME]</span> Iframe carregado e pronto
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FidoIframeHandler {
+            constructor() {
+                this.port = null;
+                this.logs = document.getElementById('logs');
+                this.status = document.getElementById('status');
+                this.manualButton = document.getElementById('manual-auth');
+
+                this.setupMessageListener();
+                this.setupManualButton();
+                this.log('🔧 FidoIframeHandler inicializado');
+            }
+
+            setupMessageListener() {
+                window.addEventListener('message', (event) => {
+                    this.log(`📨 Mensagem recebida de: ${event.origin}`);
+
+                    const { message, data } = event.data;
+
+                    if (message === 'authenticate') {
+                        this.log('🚀 Iniciando processo de autenticação');
+                        this.handleAuthenticationRequest(data, event.ports[0]);
+                    }
+                });
+
+                this.log('👂 Message listener configurado');
+            }
+
+            setupManualButton() {
+                this.manualButton.addEventListener('click', () => {
+                    this.log('👆 Botão manual clicado');
+                    this.executeWebAuthn();
+                });
+            }
+
+            async handleAuthenticationRequest(data, port) {
+                this.port = port;
+                this.transactionId = data.transactionId;
+                this.log(`📋 Dados recebidos: ${JSON.stringify(data)}`);
+
+                this.updateStatus('Processando solicitação...', 'info');
+
+                // Notificar que estamos prontos
+                this.sendMessage('ready', { timestamp: Date.now() });
+
+                // Iniciar WebAuthn automaticamente
+                this.log('🔄 Iniciando WebAuthn...');
+                this.updateStatus('Preparando autenticação...', 'info');
+
+                // Executar após 1 segundo para dar tempo da UI atualizar
+                setTimeout(() => {
+                    this.executeWebAuthn();
+                }, 1000);
+            }
+
+            async executeWebAuthn() {
+                this.manualButton.style.display = 'none';
+                this.log('🔐 Iniciando WebAuthn...');
+                this.updateStatus('Aguardando autenticação biométrica...', 'info');
+
+                try {
+                    // Verificar suporte WebAuthn
+                    if (!this.isWebAuthnSupported()) {
+                        throw new Error('WebAuthn não é suportado neste dispositivo');
+                    }
+
+                    // Executar WebAuthn real
+                    this.log('🚀 Executando WebAuthn real...');
+                    const credential = await this.tryRealWebAuthn();
+                    this.log(`🔑 Credencial obtida: ${credential.id}`);
+
+                    // Validar transação no backend
+                    this.updateStatus('Validando credencial no backend...', 'info');
+                    this.log('🔄 Validando com endpoints reais...', 'info');
+                    await this.validateTransaction(credential.id);
+
+                    // Fechar transação e obter security token (Responsabilidade dos Factors)
+                    this.updateStatus('Fechando transação e obtendo token...', 'info');
+                    const securityToken = await this.closeTransactionAndGetToken(credential.id);
+                    this.log(`🎫 Security token obtido: ${securityToken}`);
+
+                    // Sucesso com security token!
+                    this.handleSuccess(credential, securityToken);
+
+                } catch (error) {
+                    this.log(`❌ Erro na autenticação: ${error.message}`);
+                    this.handleError({
+                        message: error.message,
+                        retriable: false,
+                        cause: 'WEBAUTHN_ERROR'
+                    });
+                }
+            }
+
+            isWebAuthnSupported() {
+                // Verificação REAL de suporte WebAuthn
+                return 'credentials' in navigator && 'get' in navigator.credentials;
+            }
+
+            async tryRealWebAuthn() {
+                try {
+                    this.log('📋 Criando options para WebAuthn...');
+
+                    // Configuração básica para WebAuthn
+                    const publicKeyCredentialRequestOptions = {
+                        challenge: new Uint8Array(32), // Em produção, viria do servidor
+                        allowCredentials: [], // Permitir qualquer passkey existente
+                        userVerification: 'preferred', // Preferir verificação biométrica
+                        timeout: 60000, // 60 segundos
+                    };
+
+                    // Preencher challenge com dados aleatórios para POC
+                    crypto.getRandomValues(publicKeyCredentialRequestOptions.challenge);
+
+                    this.log('🔐 Chamando navigator.credentials.get()...');
+                    this.updateStatus('👆 Toque no sensor biométrico ou use sua passkey', 'info');
+
+                    const credential = await navigator.credentials.get({
+                        publicKey: publicKeyCredentialRequestOptions
+                    });
+
+                    if (!credential) {
+                        throw new Error('Nenhuma credencial retornada');
+                    }
+
+                    this.log('✅ WebAuthn real bem-sucedido!');
+
+                    // Converter para formato compatível
+                    return {
+                        id: credential.id,
+                        type: credential.type,
+                        response: {
+                            authenticatorData: btoa(String.fromCharCode(...new Uint8Array(credential.response.authenticatorData))),
+                            signature: btoa(String.fromCharCode(...new Uint8Array(credential.response.signature))),
+                            userHandle: credential.response.userHandle ? btoa(String.fromCharCode(...new Uint8Array(credential.response.userHandle))) : null
+                        }
+                    };
+
+                } catch (error) {
+                    this.log(`❌ Erro WebAuthn real: ${error.message}`);
+
+                    if (error.name === 'NotAllowedError') {
+                        throw new Error('Usuário cancelou ou não autorizou a operação');
+                    } else if (error.name === 'InvalidStateError') {
+                        throw new Error('Nenhuma passkey disponível neste dispositivo');
+                    } else {
+                        throw new Error(`Erro WebAuthn: ${error.message}`);
+                    }
+                }
+            }
+
+            async validateTransaction(credentialCode) {
+                try {
+                    if (!this.transactionId) {
+                        throw new Error('Transaction ID não encontrado');
+                    }
+
+                    this.log(`🔄 Validando transação ${this.transactionId} com código: ${credentialCode}`);
+
+                    const response = await fetch(`https://login-sandbox.melioffice.com/internal/authentication_transactions/${this.transactionId}/validation`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            code: credentialCode
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    this.log(`✅ Validação bem-sucedida: ${JSON.stringify(data)}`, 'success');
+
+                    return data;
+
+                } catch (error) {
+                    this.log(`❌ Erro na validação: ${error.message}`, 'error');
+                    throw new Error(`Falha na validação: ${error.message}`);
+                }
+            }
+
+            async closeTransactionAndGetToken(transactionCode) {
+                try {
+                    this.log(`🎫 Fechando transação ${this.transactionId} e obtendo security token...`);
+
+                    const response = await fetch(`https://login-sandbox.melioffice.com/internal/authentication_transactions/${this.transactionId}/close`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            transaction_code: transactionCode,
+                            status: 'completed'
+                        })
+                    });
+
+                    if (!response.ok) {
+                        // Se o endpoint /close não existir, usar o transaction_code como security_token
+                        this.log(`⚠️ Endpoint /close não disponível, usando transaction_code como token`);
+                        return transactionCode;
+                    }
+
+                    const data = await response.json();
+                    this.log(`🎫 Security token obtido: ${JSON.stringify(data)}`);
+
+                    const securityToken = data.security_token || data.token || transactionCode;
+                    this.log(`✅ Token final: ${securityToken}`);
+
+                    return securityToken;
+
+                } catch (error) {
+                    this.log(`⚠️ Erro ao fechar transação, usando fallback: ${error.message}`);
+                    // Fallback: usar o transaction_code como security_token
+                    return transactionCode;
+                }
+            }
+
+            handleSuccess(credential, securityToken = null) {
+                this.log('🎉 Autenticação bem-sucedida');
+                this.updateStatus('✅ Autenticação realizada com sucesso!', 'success');
+
+                const responseData = {
+                    token: credential.id,
+                    securityToken: securityToken || credential.id, // Security token obtido pelos Factors
+                    sessionId: `session_${Date.now()}`,
+                    credentialId: credential.id,
+                    authenticatorData: credential.response.authenticatorData,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.sendMessage('authenticate', responseData);
+                this.log(`📤 Resposta de sucesso enviada com security token: ${responseData.securityToken}`);
+            }
+
+            handleError(error) {
+                this.log(`💥 Tratando erro: ${error.message}`);
+                this.updateStatus(`❌ Erro: ${error.message}`, 'error');
+
+                this.sendMessage('error', { error });
+                this.log('📤 Resposta de erro enviada');
+            }
+
+            sendMessage(message, data) {
+                if (this.port) {
+                    this.port.postMessage({ message, data });
+                    this.log(`📡 Mensagem enviada: ${message}`);
+                } else {
+                    this.log('⚠️ Nenhuma porta disponível para envio');
+                }
+            }
+
+            updateStatus(message, type) {
+                this.status.textContent = message;
+                this.status.className = `status ${type}`;
+                this.log(`🔄 Status: ${message}`);
+            }
+
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+
+                this.logs.appendChild(logEntry);
+                this.logs.scrollTop = this.logs.scrollHeight;
+
+                // Manter apenas os últimos 50 logs
+                while (this.logs.children.length > 50) {
+                    this.logs.removeChild(this.logs.firstChild);
+                }
+            }
+        }
+
+        // Inicializar quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔐 FIDO Iframe carregado');
+            window.fidoHandler = new FidoIframeHandler();
+        });
+
+        // Notificar parent que iframe está carregado
+        window.addEventListener('load', () => {
+            console.log('✅ Iframe totalmente carregado');
+        });
+    </script>
+</body>
+
+</html>
