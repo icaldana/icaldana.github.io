@@ -1,0 +1,82 @@
+# Configuração Netlify para POC FIDO Standalone
+[build]
+  # Diretório onde estão os arquivos para deploy
+  publish = "."
+  
+  # Comando de build (opcional, não precisamos para esta POC)
+  command = ""
+
+# Configurações das Functions
+[functions]
+  # Diretório onde estão as functions
+  directory = "netlify/functions"
+
+# Configurações de redirecionamento
+[[redirects]]
+  # Redirecionar paths com ID dinâmico para auth-validate
+  from = "/.netlify/functions/auth-validate/:id/validation"
+  to = "/.netlify/functions/auth-validate"
+  status = 200
+
+[[redirects]]
+  # Redirecionar paths com ID dinâmico para auth-close
+  from = "/.netlify/functions/auth-close/:id/close"
+  to = "/.netlify/functions/auth-close"
+  status = 200
+
+# Headers para CORS e segurança
+[[headers]]
+  # Aplicar headers para todas as pages
+  for = "/*"
+  [headers.values]
+    # CORS headers
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, X-User-Id, Accept, Origin, Referer, User-Agent"
+    
+    # Security headers
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Content Security Policy - permitir iframe e fontes necessárias
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-src 'self'; connect-src 'self' *.netlify.app *.melioffice.com"
+
+[[headers]]
+  # Headers específicos para as functions
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, X-User-Id, Accept, Origin, Referer, User-Agent"
+
+# Configurações de contexto para diferentes ambientes
+[context.production]
+  # Configurações para produção
+  [context.production.environment]
+    NODE_ENV = "production"
+
+[context.deploy-preview]
+  # Configurações para deploy preview
+  [context.deploy-preview.environment]
+    NODE_ENV = "development"
+
+[context.branch-deploy]
+  # Configurações para deploy de branch
+  [context.branch-deploy.environment]
+    NODE_ENV = "development"
+
+# Configurações de Edge Functions (caso precise no futuro)
+# [edge_functions]
+
+# Configurações específicas para desenvolvimento local
+[dev]
+  # Comando para executar localmente
+  command = "npx serve . -p 8888"
+  
+  # Porta para as functions em desenvolvimento
+  functions = "netlify/functions"
+  
+  # Porta para o servidor de desenvolvimento
+  port = 8888
