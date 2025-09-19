@@ -28,6 +28,12 @@ class PasskeyStandaloneIntegration {
         this.statusElement = document.getElementById('auth-status');
         this.resultElement = document.getElementById('auth-result');
         this.currentSecurityToken = null;
+
+        this.config = {
+            timeout: 60000
+        };
+
+
         this.setupEventListeners();
         this.logger.log('🚀 WebAuthn POC initialized', 'info');
     }
@@ -41,6 +47,18 @@ class PasskeyStandaloneIntegration {
         // Clear logs button
         document.getElementById('clear-logs').addEventListener('click', () => {
             this.logger.clear();
+        });
+
+        window.addEventListener('message', (event) => {
+            this.logger.log(`📨 Window message from ${event.origin}`, 'info');
+        });
+
+        window.addEventListener('error', (event) => {
+            this.logger.log(`💥 Global Error: ${event.message}`, 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            this.logger.log(`💥 Unhandled Promise Rejection: ${event.reason}`, 'error');
         });
     }
 
@@ -110,36 +128,62 @@ class PasskeyStandaloneIntegration {
 
             // Configurar listener para resposta
             port1.onmessage = (event) => {
+                this.logger.log('📨 Message received via MessageChannel', 'info');
                 const { message, data } = event.data;
 
                 switch (message) {
                     case 'authenticate':
                         // Success! Received security token from Factors
-                        this.logger.log(`✅ Token obtained: ${data.securityToken.substring(0, 30)}...`, 'success');
+                        this.logger.log(`✅ Token obtained: ${data.securityToken?.substring(0, 30) || 'N/A'}...`, 'success');
                         resolve({
                             success: true,
                             token: data.token,
-                            transactionCode: data.token, // The credential.id
+                            transactionCode: data.transactionCode || data.token, // The credential.id
                             securityToken: data.securityToken, // Security token obtained from Factors
                             sessionId: data.sessionId || `session_${Date.now()}`,
-                            timestamp: new Date().toISOString()
+                            timestamp: data.timestamp || new Date().toISOString(),
+                            credentialId: data.credentialId,
+                            validationType: data.validationType
                         });
                         break;
 
                     case 'error':
                         // Authentication error
-                        this.logger.log(`❌ Error: ${data.error.message}`, 'error');
+                        const error = data.error || {};
+                        this.logger.log(`❌ Error: ${error.message} (${error.cause || 'Unknown'})`, 'error');
                         resolve({
                             success: false,
-                            error: data.error,
+                            error: {
+                                message: error.message,
+                                name: error.name || 'AuthenticationError',
+                                retriable: error.retriable || false,
+                                cause: error.cause || 'UNKNOWN_ERROR',
+                                timestamp: error.timestamp || new Date().toISOString()
+                            },
+                        });
+                        break;
+
+                    case 'cancelled':
+                        // Usuário cancelou
+                        this.logger.log('🚫 Authentication cancelled by user', 'error');
+                        resolve({
+                            success: false,
+                            error: {
+                                message: 'User cancelled authentication',
+                                name: 'UserCancelledError',
+                                retriable: true,
+                                cause: 'USER_CANCELLED'
+                            }
                         });
                         break;
 
                     case 'ready':
                         // Iframe loaded and ready
+                        this.logger.log('✅ Iframe ready for authentication', 'info');
                         break;
 
                     default:
+                        this.logger.log(`❓ Unknown message type: ${message}`, 'info');
                         break;
                 }
 
@@ -149,14 +193,14 @@ class PasskeyStandaloneIntegration {
             // Get iframe reference
             this.iframe = document.getElementById('passkey-iframe');
 
-            // Configure 60-second timeout
+            // Configure timeout
             const timeoutId = setTimeout(() => {
                 if (port1.onmessage) {
                     port1.close();
-                    this.logger.log('⏰ Authentication timeout (60s)', 'error');
-                    reject(new Error('Authentication timeout after 60 seconds'));
+                    this.logger.log(`⏰ Authentication timeout (${this.config.timeout / 1000}s)`, 'error');
+                    reject(new Error(`Authentication timeout after ${this.config.timeout / 1000} seconds`));
                 }
-            }, 60000);
+            }, this.config.timeout);
 
             // Wait for iframe to load
             const handleIframeLoad = () => {
@@ -213,6 +257,8 @@ class PasskeyStandaloneIntegration {
             statusMessage += ' (can try again)';
         }
 
+        let suggestion = this.getErrorSuggestion(error);
+
         this.updateStatus(statusMessage, 'error');
 
         // Display detailed error
@@ -220,9 +266,11 @@ class PasskeyStandaloneIntegration {
             success: false,
             error: {
                 message: error.message,
-                retriable: error.retriable,
+                name: error.name || 'AuthenticationError',
+                retriable: error.retriable || false,
                 cause: error.cause || 'Erro desconhecido',
-                timestamp: new Date().toISOString()
+                suggestion: suggestion,
+                timestamp: error.timestamp || new Date().toISOString()
             }
         });
     }
@@ -248,6 +296,20 @@ class PasskeyStandaloneIntegration {
             }
             return '<span class="' + cls + '">' + match + '</span>';
         });
+    }
+    getErrorSuggestion(error) {
+        switch (error.cause) {
+            case 'USER_CANCELLED':
+                return 'Try the authentication again and complete the biometric verification.';
+            case 'NO_PASSKEY_AVAILABLE':
+                return 'Register a passkey for this account or use a device with a registered passkey.';
+            case 'NETWORK_ERROR':
+                return 'Check your internet connection and try again.';
+            case 'SECURITY_ERROR':
+                return 'Ensure you are using HTTPS and the iframe can load properly.';
+            default:
+                return 'Please try again or contact support if the issue persists.';
+        }
     }
 }
 

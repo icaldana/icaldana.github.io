@@ -96,7 +96,7 @@
         // auth-passkey-frontend service configuration
         const AUTH_PASSKEY_CONFIG = {
             baseUrl: 'https://auth-passkey-frontend.sandbox.melioffice.com',
-            timeout: 60000
+            timeout: 60000,
         };
 
         class FidoIframeHandler {
@@ -268,6 +268,12 @@
                         throw new Error('No passkey available on this device');
                     } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
                         throw new Error('Connection error with authentication service');
+                    } else if (error.name === 'AbortError') {
+                        throw new Error('Authentication was aborted');
+                    } else if (error.name === 'SecurityError') {
+                        throw new Error('Security error - invalid origin or configuration');
+                    } else if (error.message.includes('404') || error.message.includes('500')) {
+                        throw new Error('Authentication service temporarily unavailable');
                     } else {
                         throw new Error(`WebAuthn error: ${error.message}`);
                     }
@@ -284,7 +290,10 @@
                     sessionId: `session_${Date.now()}`,
                     credentialId: credential.id,
                     authenticatorData: credential.response.authenticatorData,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    transactionCode: credential.id,
+                    validationType: 'PAYMENT_FLOW',
+                    success: true
                 };
 
                 this.sendMessage('authenticate', responseData);
@@ -294,7 +303,16 @@
             handleError(error) {
                 this.log(`❌ Error: ${error.message}`);
                 this.updateStatus(`❌ Error: ${error.message}`, 'error');
-                this.sendMessage('error', { error });
+
+                const errorData = {
+                    error: {
+                        message: error.message,
+                        name: error.name || 'UnknownError',
+                        timestamp: new Date().toISOString()
+                    }
+                };
+
+                this.sendMessage('error', errorData);
             }
 
             sendMessage(message, data) {
